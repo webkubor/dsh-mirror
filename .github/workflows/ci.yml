@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # 本包有运行时依赖（ai-orb）和一组 peerDependencies，必须真装才能 import。
+      # 不用 npm ci：仓库不提交 lockfile（插件由宿主 profile 决定最终版本树）。
+      - name: 装依赖
+        run: npm install --no-audit --no-fund
+
+      # 记忆内核的十个纯函数：相似判定、强度衰减、预算选择。
+      # 这些错不会报异常，只会悄悄记错东西或该覆盖时没覆盖 —— 等人发现时库已经脏了。
+      # 另有四道契约守卫（包名 / 注册 id / cordis.patch name / README 包名），
+      # 其中 cordis.patch name 那条对应 0.6.3 的真实事故：它写错会让整个 DSH 起不来。
+      - name: 测试
+        run: npm test
+
+      # 发布产物完整性：files 少一个文件，装上去不报错，但插件根本不进 boot graph。
+      - name: 校验发布产物
+        run: |
+          set -e
+          node -e "
+            const fs = require('node:fs')
+            const pkg = require('./package.json')
+            const must = ['index.js', 'client.js', 'cordis.patch.yml']
+            for (const f of must) {
+              if (!pkg.files.includes(f)) throw new Error('package.json files 缺 ' + f)
+              if (!fs.existsSync(f)) throw new Error('文件不存在: ' + f)
+            }
+            if (!pkg.dsh?.bundle?.patch) throw new Error('缺 dsh.bundle.patch，插件不会被插进 boot graph')
+            if (!pkg.exports?.['./client']) throw new Error('缺 exports[\"./client\"]，客户端半边加载不到')
+            console.log('✓ 发布产物完整')
+          "
+
+      # npm pack 的产物就是别人装到的东西 —— 本地有、tarball 里没有，是最难查的一类。
+      - name: 打包后复查
+        run: |
+          set -e
+          npm pack --silent >/dev/null
+          tar -tzf *.tgz | sed 's|^package/||' | sort > /tmp/packed.txt
+          for f in index.js client.js cordis.patch.yml package.json; do
+            grep -qx "$f" /tmp/packed.txt || { echo "❌ tarball 缺 $f"; exit 1; }
+          done
+          echo "✓ tarball 内容完整"

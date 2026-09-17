@@ -9,7 +9,7 @@
  *  - MemoryView 组件用 React hooks + fetch 渲染记忆列表
  */
 window.__ModuleLoader__.load({
-  id: 'dsh-user-mirror',
+  id: '@dsh-plugins/dsh-user-mirror',
   factory: (require) => {
     const React = require('react')
     const exports = {}

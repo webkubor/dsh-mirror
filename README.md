@@ -1,14 +1,15 @@
-<h1 align="center">🪞 dsh-mirror</h1>
+<h1 align="center">🪞 dsh-user-mirror</h1>
 
 <p align="center">
   <strong>Let the AI know you.</strong><br>
-  从 think 链学习你的偏好，让 DSH 越用越懂你。
+  让模型主动记下你的判断依据（原则 / 红线 / 工作方式），跨会话复用 —— 有容量、会遗忘、每条都说得出为什么记。
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/dependencies-4-blue" alt="deps">
-  <img src="https://img.shields.io/badge/license-MIT-green" alt="MIT">
-  <img src="https://img.shields.io/badge/DSH-%E2%89%A50.1.1--rc.2-8b5cf6" alt="DSH">
+  <img src="https://img.shields.io/badge/deps-1%20runtime%20%C2%B7%205%20peer-blue?style=flat-square" alt="deps">
+  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT">
+  <img src="https://img.shields.io/badge/DSH-%E2%89%A50.1.1--rc.2-8b5cf6?style=flat-square" alt="DSH">
+  &nbsp;·&nbsp; <a href="CHANGELOG.md">更新日志</a>
 </p>
 
 ---
@@ -68,7 +69,7 @@ v0.4 之前是用正则扫模型的 reasoning 流，找「用户偏好…」这�
 ## 安装
 
 ```bash
-dsh plugin --profile web add dsh-user-mirror
+dsh plugin --profile web add @dsh-plugins/dsh-user-mirror
 ```
 
 ⚠️ **只能装在提供 `storageDomain` 和 `webServer` 的 profile 上**（也就是 web）。

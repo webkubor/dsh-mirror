@@ -1,0 +1,8 @@
+# dsh-mirror bundle patch：把偏好学习插件插入 web profile。
+#
+# 作为 dsh.bundle.patch 被 dsh 加载器消费。insert 引用本包（dsh-user-mirror），
+# 加载器会从 profile 的 node_modules 解析它并加载为 Cordis 插件。
+# 不写 config = 用插件 Config 的默认值（见 index.js）。
+- insert:
+    - id: dsh-mirror
+      name: dsh-user-mirror

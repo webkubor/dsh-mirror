@@ -16,60 +16,224 @@ window.__ModuleLoader__.load({
     Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' })
 
     const CSS = `
-      .dsh-mirror-view { padding: 16px; font-size: 13px; line-height: 1.6; height: 100%; overflow: auto; }
-      .dsh-mirror-view h3 { margin: 0 0 2px; font-size: 14px; font-weight: 600; }
-      .dsh-mirror-view .dmr-sub { color: var(--dsw-alias-label-secondary, #888); font-size: 12px; margin-bottom: 12px; }
-      .dsh-mirror-item {
-        border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.08));
-        border-radius: 8px; padding: 8px 12px; margin-bottom: 8px;
-        background: var(--dsw-alias-bg-layer-1, #fff);
+      .dsh-mirror-view { padding: 20px 20px 28px; font-size: 13px; line-height: 1.6; height: 100%; overflow: auto; }
+
+      /* 入场：判断依次浮起，不是一次性糊上来 */
+      @keyframes dmr-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
+      @keyframes dmr-grow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+      @keyframes dmr-fade { from { opacity: 0; } to { opacity: 1; } }
+
+      /* ── 画像头：一层极淡的光晕，让它从列表里浮出来 ── */
+      .dmr-portrait {
+        display: flex; gap: 13px; align-items: flex-start;
+        padding: 16px 16px 18px; border-radius: 14px; margin-bottom: 4px;
+        background:
+          radial-gradient(120% 140% at 0% 0%, rgba(192, 138, 62, .10) 0%, transparent 58%),
+          var(--dsw-alias-bg-layer-2, rgba(0,0,0,.02));
+        animation: dmr-fade .5s ease both;
       }
-      .dsh-mirror-item .dmr-text { color: var(--dsw-alias-label-primary, #222); }
-      .dsh-mirror-item .dmr-meta { color: var(--dsw-alias-label-tertiary, #aaa); font-size: 11px; margin-top: 4px; display: flex; gap: 10px; }
-      .dsh-mirror-empty { color: var(--dsw-alias-label-tertiary, #aaa); text-align: center; padding: 40px 0; }
+      .dsh-mirror-orb { flex: none; display: flex; align-items: center; margin-top: 3px; }
+      .dsh-mirror-orb:empty { display: none; }
+      .dsh-mirror-orb-fallback { flex: none; font-size: 19px; line-height: 1; margin-top: 2px; }
+      .dmr-portrait-body { flex: 1; min-width: 0; }
+      .dmr-eyebrow {
+        font-size: 10px; letter-spacing: .16em; text-transform: uppercase;
+        color: var(--dsw-alias-label-tertiary, #aaa); margin-bottom: 7px;
+      }
+      .dmr-sketch {
+        font-size: 16px; line-height: 1.58; color: var(--dsw-alias-label-primary, #222);
+        margin: 0; font-weight: 450; text-wrap: balance; letter-spacing: -.003em;
+        animation: dmr-rise .5s .06s cubic-bezier(.22,.61,.36,1) both;
+      }
+      .dmr-sketch b { font-weight: 650; }
+      .dmr-sketch-note {
+        color: var(--dsw-alias-label-tertiary, #aaa); font-size: 11.5px; margin-top: 8px;
+        font-variant-numeric: tabular-nums;
+        animation: dmr-rise .5s .12s cubic-bezier(.22,.61,.36,1) both;
+      }
+
+      /* 四类强度计：条从左侧展开 */
+      .dmr-meters { display: flex; flex-wrap: wrap; gap: 18px; margin-top: 16px; }
+      .dmr-meter { min-width: 88px; flex: 1 1 88px; max-width: 160px; }
+      .dmr-meter .lab {
+        font-size: 11.5px; color: var(--dsw-alias-label-secondary, #888);
+        display: flex; justify-content: space-between; gap: 8px; align-items: baseline;
+      }
+      .dmr-meter .lab b {
+        font-weight: 650; color: var(--dsw-alias-label-primary, #222);
+        font-variant-numeric: tabular-nums; font-size: 12.5px;
+      }
+      .dmr-meter .bar {
+        height: 3px; border-radius: 3px; margin-top: 7px; overflow: hidden;
+        background: var(--dsw-alias-border-l1, rgba(0,0,0,.07));
+      }
+      .dmr-meter .bar i {
+        display: block; height: 100%; border-radius: 3px; transform-origin: left;
+        background: linear-gradient(90deg, #C08A3E, #D9A257);
+        animation: dmr-grow .7s .2s cubic-bezier(.22,.61,.36,1) both;
+      }
+      .dmr-meter.is-red .bar i { background: linear-gradient(90deg, #C9564A, #DE7264); }
+
+      .dmr-rule { border: 0; height: 0; margin: 22px 0 0; }
+
+      /* ── 分区标题 ── */
+      .dmr-sec { display: flex; align-items: baseline; gap: 8px; margin: 0 0 11px; }
+      .dmr-sec h4 {
+        margin: 0; font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+        color: var(--dsw-alias-label-secondary, #888);
+      }
+      .dmr-sec .n {
+        font-size: 11px; color: var(--dsw-alias-label-tertiary, #aaa);
+        font-variant-numeric: tabular-nums;
+      }
+      .dmr-sec .hint { margin-left: auto; font-size: 11px; color: var(--dsw-alias-label-tertiary, #aaa); }
+
+      /* ── 红线：左侧一道竖条，比整框包围更利落 ── */
+      .dmr-redline {
+        display: flex; gap: 11px; align-items: flex-start; margin-bottom: 7px;
+        background: linear-gradient(90deg, rgba(201, 86, 74, .09), rgba(201, 86, 74, .03) 60%, transparent);
+        border-left: 2px solid #C9564A; border-radius: 3px 9px 9px 3px;
+        padding: 10px 13px;
+        animation: dmr-rise .42s cubic-bezier(.22,.61,.36,1) both;
+        transition: background .2s ease;
+      }
+      .dmr-redline:hover { background: linear-gradient(90deg, rgba(201, 86, 74, .15), rgba(201, 86, 74, .05) 60%, transparent); }
+      .dmr-redline:nth-child(2) { animation-delay: .04s; }
+      .dmr-redline:nth-child(3) { animation-delay: .08s; }
+      .dmr-redline:nth-child(4) { animation-delay: .12s; }
+      .dmr-redline:nth-child(n+5) { animation-delay: .16s; }
+      .dmr-redline .mark {
+        flex: none; color: #C9564A; font-size: 10px; font-weight: 700; margin-top: 3.5px;
+        font-variant-numeric: tabular-nums; letter-spacing: .04em;
+      }
+      .dmr-redline .t { color: var(--dsw-alias-label-primary, #222); font-weight: 500; }
+
+      /* ── 原则卡：强度进字重与明度，hover 才浮起来 ── */
+      .dmr-card {
+        border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
+        border-radius: 10px; padding: 12px 14px; margin-bottom: 7px;
+        background: var(--dsw-alias-bg-layer-1, #fff);
+        animation: dmr-rise .42s cubic-bezier(.22,.61,.36,1) both;
+        transition: transform .2s cubic-bezier(.22,.61,.36,1), box-shadow .2s ease, border-color .2s ease;
+      }
+      .dmr-card:nth-child(2) { animation-delay: .04s; }
+      .dmr-card:nth-child(3) { animation-delay: .08s; }
+      .dmr-card:nth-child(4) { animation-delay: .12s; }
+      .dmr-card:nth-child(5) { animation-delay: .16s; }
+      .dmr-card:nth-child(n+6) { animation-delay: .2s; }
+      .dmr-card:hover, .dmr-card:focus-within {
+        transform: translateY(-1px);
+        border-color: rgba(192, 138, 62, .42);
+        box-shadow: 0 6px 18px -10px rgba(0, 0, 0, .3);
+      }
+      .dmr-card .t { margin: 0; color: var(--dsw-alias-label-primary, #222); text-wrap: pretty; }
+      .dmr-card.s-3 .t { font-size: 14.5px; font-weight: 600; letter-spacing: -.004em; }
+      .dmr-card.s-2 .t { font-size: 13.5px; font-weight: 500; }
+      .dmr-card.s-1 .t { font-size: 13px; font-weight: 400; color: var(--dsw-alias-label-secondary, #888); }
+
+      .dmr-evid {
+        margin-top: 9px; font-size: 11.5px; color: var(--dsw-alias-label-tertiary, #aaa);
+        display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
+      }
+      /* 印证次数：小横条比圆点更有“计量”感 */
+      .dmr-dots { display: inline-flex; gap: 2.5px; }
+      .dmr-dots i {
+        width: 9px; height: 3px; border-radius: 2px; display: block;
+        background: linear-gradient(90deg, #C08A3E, #D9A257);
+      }
+      .dmr-dots i.off { background: var(--dsw-alias-border-l2, rgba(0,0,0,.1)); }
+      .dmr-why-btn {
+        border: 0; background: none; padding: 0; cursor: pointer; font: inherit; font-size: 11.5px;
+        color: var(--dsw-alias-label-tertiary, #aaa);
+        border-bottom: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.12));
+        transition: color .15s ease, border-color .15s ease;
+      }
+      .dmr-why-btn:hover { color: #C08A3E; border-color: rgba(192, 138, 62, .5); }
+      .dmr-spacer { margin-left: auto; }
+      .dmr-why {
+        margin-top: 10px; padding-top: 10px; font-size: 12px; line-height: 1.7;
+        color: var(--dsw-alias-label-secondary, #888);
+        border-top: 1px dashed var(--dsw-alias-border-l1, rgba(0,0,0,.09));
+        animation: dmr-rise .28s ease both;
+      }
+      .dmr-forget {
+        flex: none; border: none; background: none; cursor: pointer;
+        color: var(--dsw-alias-border-l2, rgba(0,0,0,.18)); font-size: 12px; padding: 0 3px;
+        border-radius: 5px; line-height: 1.4; transition: color .15s ease, background .15s ease;
+      }
+      .dmr-card:hover .dmr-forget { color: var(--dsw-alias-label-tertiary, #aaa); }
+      .dmr-forget:hover { color: var(--dsw-alias-label-primary, #222); background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.06)); }
+      .dmr-forget.is-confirming { color: #ef5350; }
+
+      /* ── 双栏 ── */
+      .dmr-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+      @media (max-width: 560px) { .dmr-cols { grid-template-columns: 1fr; gap: 20px; } }
+      .dmr-plain { list-style: none; margin: 0; padding: 0; }
+      .dmr-plain li {
+        display: flex; gap: 9px; align-items: flex-start; margin-bottom: 7px;
+        font-size: 12.5px; color: var(--dsw-alias-label-secondary, #888);
+        animation: dmr-rise .4s .1s cubic-bezier(.22,.61,.36,1) both;
+      }
+      .dmr-plain li::before {
+        content: ""; flex: none; width: 4px; height: 4px; border-radius: 50%;
+        background: var(--dsw-alias-border-l2, rgba(0,0,0,.18)); margin-top: 7.5px;
+      }
+      .dmr-plain li .t { color: var(--dsw-alias-label-primary, #222); }
+
+      /* ── 正在淡忘 ── */
+      .dmr-fading > summary {
+        cursor: pointer; font-size: 11.5px; color: var(--dsw-alias-label-tertiary, #aaa);
+        list-style: none; padding: 7px 0; display: flex; align-items: center; gap: 7px;
+        transition: color .15s ease;
+      }
+      .dmr-fading > summary:hover { color: var(--dsw-alias-label-secondary, #888); }
+      .dmr-fading > summary::-webkit-details-marker { display: none; }
+      .dmr-fading > summary::before {
+        content: "▸"; font-size: 9px; transition: transform .22s cubic-bezier(.22,.61,.36,1);
+      }
+      .dmr-fading[open] > summary::before { transform: rotate(90deg); }
+      .dmr-fade-item {
+        display: flex; align-items: center; gap: 10px; font-size: 12.5px;
+        color: var(--dsw-alias-label-tertiary, #aaa); padding: 8px 12px; margin-bottom: 6px;
+        border: 1px dashed var(--dsw-alias-border-l1, rgba(0,0,0,.1)); border-radius: 9px;
+        animation: dmr-rise .32s ease both;
+      }
+
+      /* ── 状态与说明 ── */
+      .dsh-mirror-empty { color: var(--dsw-alias-label-tertiary, #aaa); text-align: center; padding: 44px 16px; line-height: 1.85; }
       .dsh-mirror-refresh {
         border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.1));
         background: var(--dsw-alias-button-elevated-fill, #fff);
-        color: var(--dsw-alias-label-primary, #222);
-        border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 12px;
+        color: var(--dsw-alias-label-secondary, #888);
+        border-radius: 7px; padding: 3px 11px; cursor: pointer; font-size: 11.5px;
+        transition: color .15s ease, border-color .15s ease, background .15s ease;
       }
-      .dsh-mirror-refresh:hover { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05)); }
-      .dsh-mirror-title { display: flex; align-items: center; gap: 8px; }
+      .dsh-mirror-refresh:hover {
+        background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.05));
+        color: var(--dsw-alias-label-primary, #222);
+      }
       .dsh-mirror-how {
-        border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.08));
-        border-radius: 8px; padding: 10px 12px; margin: 4px 0 12px;
+        border: 1px solid var(--dsw-alias-border-l1, rgba(0,0,0,.07));
+        border-radius: 10px; padding: 11px 13px; margin-top: 22px;
         background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.02));
         font-size: 12px; line-height: 1.7;
       }
       .dsh-mirror-how summary { cursor: pointer; color: var(--dsw-alias-label-secondary, #888); }
       .dsh-mirror-how dl { margin: 8px 0 0; }
-      .dsh-mirror-how dt { color: var(--dsw-alias-label-primary, #222); font-weight: 600; margin-top: 6px; }
+      .dsh-mirror-how dt { color: var(--dsw-alias-label-primary, #222); font-weight: 600; margin-top: 7px; }
       .dsh-mirror-how dd { margin: 2px 0 0; color: var(--dsw-alias-label-secondary, #888); }
       .dsh-mirror-how code {
         background: var(--dsw-alias-bg-layer-3, rgba(0,0,0,.05));
-        padding: 1px 4px; border-radius: 4px; font-size: 11px;
+        padding: 1px 5px; border-radius: 4px; font-size: 11px;
       }
-      .dmr-kind {
-        flex: none; font-size: 11px; padding: 1px 6px; border-radius: 4px;
-        border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.1));
-        color: var(--dsw-alias-label-secondary, #888);
+
+      /* 动效是增强，不是承载 —— 关掉后信息结构完全不变 */
+      @media (prefers-reduced-motion: reduce) {
+        .dmr-portrait, .dmr-sketch, .dmr-sketch-note, .dmr-card, .dmr-redline,
+        .dmr-plain li, .dmr-fade-item, .dmr-why, .dmr-meter .bar i { animation: none !important; }
+        .dmr-card { transition: none; }
+        .dmr-card:hover { transform: none; }
       }
-      .dmr-head { display: flex; align-items: baseline; gap: 6px; }
-      .dmr-forget {
-        margin-left: auto; flex: none; border: none; background: none; cursor: pointer;
-        color: var(--dsw-alias-label-tertiary, #aaa); font-size: 12px; padding: 0 4px;
-        border-radius: 4px; line-height: 1.4;
-      }
-      .dmr-forget:hover { color: var(--dsw-alias-label-primary, #222); background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.06)); }
-      .dmr-forget.is-confirming { color: #ef5350; }
-      .dmr-reason {
-        color: var(--dsw-alias-label-tertiary, #aaa); font-size: 11px;
-        margin-top: 4px; padding-left: 8px;
-        border-left: 2px solid var(--dsw-alias-border-l1, rgba(0,0,0,.08));
-      }
-      .dsh-mirror-orb { flex: none; display: flex; align-items: center; }
-      .dsh-mirror-orb:empty { display: none; }
-      .dsh-mirror-orb-fallback { flex: none; font-size: 18px; line-height: 1; }
     `
 
     /** ai-orb 的同源 ESM 入口 —— host 端 vendor 路由直接下发 node_modules 里的真源。 */
@@ -125,6 +289,59 @@ window.__ModuleLoader__.load({
       return Math.floor(diff / day) + ' 天前'
     }
 
+    /** 四类的展示顺序与中文名 —— 红线排最前，它是唯一越界有代价的一类。 */
+    const KIND_ORDER = ['redline', 'principle', 'workflow', 'taste']
+    const KIND_LABEL = {
+      redline: '红线',
+      principle: '原则 / 取舍',
+      workflow: '工作方式',
+      taste: '审美 / 表达',
+    }
+
+    /** 超过这个时间没被印证，就算「正在淡忘」——与 host 端半衰期同数量级。 */
+    const FADE_MS = 30 * 24 * 60 * 60 * 1000
+
+    /**
+     * 把一串记忆派生成画像所需的几个切面。
+     * 排序一律按 strength 降序 —— 画像的上层必须是最被印证的判断，
+     * 而不是最近写入的那条。
+     */
+    function digest(memories, now) {
+      const live = []
+      const fading = []
+      memories.forEach((m) => {
+        // 红线不参与淡忘：越界有代价的约束不该因为一阵子没踩到就消失
+        if (m.kind !== 'redline' && now - m.lastSeenAt > FADE_MS) fading.push(m)
+        else live.push(m)
+      })
+      const byKind = {}
+      KIND_ORDER.forEach((k) => { byKind[k] = [] })
+      live.forEach((m) => { (byKind[m.kind] || byKind.principle).push(m) })
+      KIND_ORDER.forEach((k) => byKind[k].sort((a, b) => b.strength - a.strength))
+      live.sort((a, b) => b.strength - a.strength)
+      fading.sort((a, b) => b.strength - a.strength)
+      const max = live.reduce((x, m) => Math.max(x, m.strength), 0) || 1
+      return { byKind, live, fading, max }
+    }
+
+    /**
+     * 强度三档 —— 相对最强的那条，而不是绝对值。
+     * 绝对值没有意义：整个库都衰减过一轮时，最强的那条也可能只有 0.5。
+     */
+    function tier(m, max) {
+      const r = m.strength / max
+      return r >= 0.66 ? 3 : r >= 0.33 ? 2 : 1
+    }
+
+    /** 画像速写下面那行：如实报数，不编。 */
+    function summaryLine(d, now) {
+      const parts = ['共 ' + d.live.length + ' 条判断在生效']
+      if (d.byKind.redline.length) parts.push(d.byKind.redline.length + ' 条红线不衰减')
+      if (d.fading.length) parts.push(d.fading.length + ' 条正在淡忘')
+      if (d.live.length) parts.push('最近一次印证 ' + timeAgo(d.live[0].lastSeenAt))
+      return parts.join(' · ')
+    }
+
     /** 记忆 tab 组件。 */
     function MemoryView() {
       const [state, setState] = React.useState({
@@ -139,6 +356,8 @@ window.__ModuleLoader__.load({
       const [orbReady, setOrbReady] = React.useState(false)
       // 待确认删除的那条 id —— 两段式，第一下只是亮起来，不直接删
       const [pendingForget, setPendingForget] = React.useState(null)
+      // 展开「看是哪几次」的那条 id —— 证据默认收起，不让细节淹掉判断
+      const [openWhy, setOpenWhy] = React.useState(null)
       const orbHost = React.useRef(null)
       const orb = React.useRef(null)
 
@@ -227,29 +446,53 @@ window.__ModuleLoader__.load({
 
       // 头部常驻（不随加载状态早退）——否则 loading 期间球还没挂上，
       // 而 thinking 恰恰是最该让人看到的那一下。
-      const header = React.createElement(
-        'div',
-        { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
-        React.createElement('div', { className: 'dsh-mirror-title' },
-          // 这个容器的 children 必须恒为空：AgentOrb 是命令式 append 进来的，
-          // 一旦让 React 管它的 children，下一次重渲染就会把球一起清掉。
-          React.createElement('div', { className: 'dsh-mirror-orb', ref: orbHost }),
-          orbReady ? null : React.createElement('span', { className: 'dsh-mirror-orb-fallback' }, '🪞'),
-          React.createElement('div', null,
-            React.createElement('h3', null, '记忆'),
-            React.createElement('div', { className: 'dmr-sub' },
-              '从 think 链学到的偏好 · 会遗忘 · 新覆盖旧',
+      // ── 从记忆列表派生画像 ───────────────────────────────────────
+      const now = Date.now()
+      const d = digest(state.memories, now)
+      const top = d.live.length ? d.live[0] : null
+
+      const header = React.createElement('div', { className: 'dmr-portrait' },
+        // 这个容器的 children 必须恒为空：AgentOrb 是命令式 append 进来的，
+        // 一旦让 React 管它的 children，下一次重渲染就会把球一起清掉。
+        React.createElement('div', { className: 'dsh-mirror-orb', ref: orbHost }),
+        orbReady ? null : React.createElement('span', { className: 'dsh-mirror-orb-fallback' }, '🪞'),
+        React.createElement('div', { className: 'dmr-portrait-body' },
+          React.createElement('div', {
+            style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px' },
+          },
+            React.createElement('div', { className: 'dmr-eyebrow' }, 'AI 眼中的你'),
+            React.createElement('button', {
+              className: 'dsh-mirror-refresh',
+              onClick: () => load(true),
+              disabled: state.refreshing,
+            }, state.refreshing ? '刷新中…' : '刷新'),
+          ),
+          // 速写取最强那条 —— 它就是模型眼里最认定你的判断，不编人格描述
+          top
+            ? React.createElement('p', { className: 'dmr-sketch' },
+                '被印证最多的判断是 ',
+                React.createElement('b', null, '「' + top.text + '」'))
+            : React.createElement('p', { className: 'dmr-sketch' }, '还没有足够的判断来描出你'),
+          React.createElement('div', { className: 'dmr-sketch-note' }, summaryLine(d, now)),
+          // 四类强度计
+          React.createElement('div', { className: 'dmr-meters' },
+            KIND_ORDER.filter((k) => d.byKind[k].length).map((k) =>
+              React.createElement('div', {
+                key: k,
+                className: 'dmr-meter' + (k === 'redline' ? ' is-red' : ''),
+              },
+                React.createElement('div', { className: 'lab' },
+                  React.createElement('span', null, KIND_LABEL[k]),
+                  React.createElement('b', null, String(d.byKind[k].length)),
+                ),
+                React.createElement('div', { className: 'bar' },
+                  React.createElement('i', {
+                    style: { width: Math.round((d.byKind[k].length / d.live.length) * 100) + '%' },
+                  }),
+                ),
+              ),
             ),
           ),
-        ),
-        React.createElement(
-          'button',
-          {
-            className: 'dsh-mirror-refresh',
-            onClick: () => load(true),
-            disabled: state.refreshing,
-          },
-          state.refreshing ? '刷新中…' : '刷新',
         ),
       )
 
@@ -283,6 +526,73 @@ window.__ModuleLoader__.load({
         ),
       )
 
+      // ── 一张卡：正面只放判断，证据折在里面 ────────────────────────
+      const cardOf = (m) => {
+        const open = openWhy === m.id
+        const confirming = pendingForget === m.id
+        return React.createElement('div', { className: 'dmr-card s-' + tier(m, d.max), key: m.id },
+          React.createElement('div', { style: { display: 'flex', gap: '8px', alignItems: 'flex-start' } },
+            React.createElement('p', { className: 't', style: { flex: 1 } }, m.text),
+            React.createElement('button', {
+              className: 'dmr-forget' + (confirming ? ' is-confirming' : ''),
+              title: confirming ? '再点一次就真的撤掉' : '撤掉这条',
+              onClick: () => (confirming ? forget(m.id) : setPendingForget(m.id)),
+              onBlur: () => confirming && setPendingForget(null),
+            }, confirming ? '确认撤掉？' : '✕'),
+          ),
+          React.createElement('div', { className: 'dmr-evid' },
+            React.createElement('span', { className: 'dmr-dots', 'aria-hidden': 'true' },
+              [0, 1, 2, 3, 4].map((i) =>
+                React.createElement('i', { key: i, className: i < Math.min(m.hits, 5) ? '' : 'off' }))),
+            React.createElement('span', null, m.hits + ' 次印证'),
+            m.reason
+              ? React.createElement('button', {
+                  className: 'dmr-why-btn',
+                  'aria-expanded': open ? 'true' : 'false',
+                  onClick: () => setOpenWhy(open ? null : m.id),
+                }, open ? '收起' : '看是哪几次')
+              : null,
+            React.createElement('span', { className: 'dmr-spacer' }),
+            React.createElement('span', null, timeAgo(m.lastSeenAt)),
+          ),
+          open && m.reason ? React.createElement('div', { className: 'dmr-why' }, m.reason) : null,
+        )
+      }
+
+      const section = (k, hint) => {
+        const list = d.byKind[k]
+        if (!list.length) return null
+        return React.createElement(React.Fragment, { key: k },
+          React.createElement('div', { className: 'dmr-sec' },
+            React.createElement('h4', null, KIND_LABEL[k]),
+            React.createElement('span', { className: 'n' }, String(list.length)),
+            hint ? React.createElement('span', { className: 'hint' }, hint) : null,
+          ),
+          k === 'redline'
+            ? list.map((m, i) =>
+                React.createElement('div', { className: 'dmr-redline', key: m.id },
+                  React.createElement('span', { className: 'mark' }, String(i + 1).padStart(2, '0')),
+                  React.createElement('span', { className: 't' }, m.text)))
+            : list.map(cardOf),
+        )
+      }
+
+      // 工作方式 / 审美 —— 轻量清单，两栏
+      const plainList = (k) => {
+        const list = d.byKind[k]
+        if (!list.length) return null
+        return React.createElement('div', null,
+          React.createElement('div', { className: 'dmr-sec' },
+            React.createElement('h4', null, KIND_LABEL[k]),
+            React.createElement('span', { className: 'n' }, String(list.length)),
+          ),
+          React.createElement('ul', { className: 'dmr-plain' },
+            list.map((m) =>
+              React.createElement('li', { key: m.id },
+                React.createElement('span', { className: 't' }, m.text)))),
+        )
+      }
+
       let content
       if (state.loading) {
         content = React.createElement('div', { className: 'dsh-mirror-empty' }, '加载中…')
@@ -292,32 +602,31 @@ window.__ModuleLoader__.load({
         content = React.createElement('div', { className: 'dsh-mirror-empty' },
           '还没有任何记忆。等你下次表达出某条原则或取舍时，模型会当场用 mirror_remember 记下来 —— 你会在对话里看到它记了什么。')
       } else {
-        const confirming = pendingForget
-        content = state.memories.map((m) =>
-          React.createElement('div', { className: 'dsh-mirror-item', key: m.id },
-            React.createElement('div', { className: 'dmr-head' },
-              React.createElement('span', { className: 'dmr-kind' }, m.kind || 'principle'),
-              React.createElement('span', { className: 'dmr-text' }, m.text),
-              React.createElement('button', {
-                className: 'dmr-forget' + (confirming === m.id ? ' is-confirming' : ''),
-                title: confirming === m.id ? '再点一次就真的撤掉' : '撤掉这条',
-                onClick: () => (confirming === m.id ? forget(m.id) : setPendingForget(m.id)),
-                onBlur: () => confirming === m.id && setPendingForget(null),
-              }, confirming === m.id ? '确认撤掉？' : '✕'),
-            ),
-            m.reason
-              ? React.createElement('div', { className: 'dmr-reason' }, '为什么记：' + m.reason)
-              : null,
-            React.createElement('div', { className: 'dmr-meta' },
-              React.createElement('span', null, '强度 ' + m.strength),
-              React.createElement('span', null, '确认 ' + m.hits + ' 次'),
-              React.createElement('span', null, timeAgo(m.lastSeenAt)),
-            ),
-          ),
+        const cols = (d.byKind.workflow.length || d.byKind.taste.length)
+          ? React.createElement('div', { className: 'dmr-cols' }, plainList('workflow'), plainList('taste'))
+          : null
+        content = React.createElement('div', null,
+          section('redline', '越界有代价，永不衰减') ? React.createElement('div', null,
+            React.createElement('hr', { className: 'dmr-rule' }),
+            section('redline', '越界有代价，永不衰减')) : null,
+          d.byKind.principle.length ? React.createElement('div', null,
+            React.createElement('hr', { className: 'dmr-rule' }),
+            section('principle', '字越重 = 被越多次印证')) : null,
+          cols ? React.createElement('div', null,
+            React.createElement('hr', { className: 'dmr-rule' }), cols) : null,
+          d.fading.length ? React.createElement('div', null,
+            React.createElement('hr', { className: 'dmr-rule' }),
+            React.createElement('details', { className: 'dmr-fading' },
+              React.createElement('summary', null,
+                '正在淡忘 · ' + d.fading.length + ' 条 —— 超过 30 天没被印证，再无命中就会被淘汰'),
+              d.fading.map((m) =>
+                React.createElement('div', { className: 'dmr-fade-item', key: m.id },
+                  React.createElement('span', null, m.text))),
+            )) : null,
         )
       }
 
-      return React.createElement('div', { className: 'dsh-mirror-view' }, header, how, content)
+      return React.createElement('div', { className: 'dsh-mirror-view' }, header, content, how)
     }
 
     exports.name = 'dsh-user-mirror'

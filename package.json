@@ -56,6 +56,7 @@
     "access": "public"
   },
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test test/*.test.mjs",
+    "deploy": "rsync -av client.js index.js package.json cordis.patch.yml README.md LICENSE ~/.dsh/profiles/web/node_modules/@dsh-plugins/dsh-user-mirror/"
   }
 }

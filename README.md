@@ -1,18 +1,43 @@
 <h1 align="center">🪞 dsh-user-mirror</h1>
 
 <p align="center">
-  <strong>Let the AI know you.</strong><br>
-  让模型主动记下你的判断依据（原则 / 红线 / 工作方式），跨会话复用 —— 有容量、会遗忘、每条都说得出为什么记。
+  <strong>让 AI 记住你怎么想，而不是你说过什么。</strong><br>
+  DSH 插件 —— 模型主动记下你的原则、红线与工作方式，跨会话复用。<br>
+  会遗忘、有容量上限、每条都说得出为什么记。
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/deps-1%20runtime%20%C2%B7%205%20peer-blue?style=flat-square" alt="deps">
-  <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" alt="MIT">
-  <img src="https://img.shields.io/badge/DSH-%E2%89%A50.1.1--rc.2-8b5cf6?style=flat-square" alt="DSH">
-  &nbsp;·&nbsp; <a href="CHANGELOG.md">更新日志</a>
+  <a href="https://www.npmjs.com/package/@dsh-plugins/dsh-user-mirror"><img src="https://img.shields.io/npm/v/%40dsh-plugins%2Fdsh-user-mirror?style=flat-square&color=8b5cf6&logo=npm&label=npm" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/@dsh-plugins/dsh-user-mirror"><img src="https://img.shields.io/npm/dm/%40dsh-plugins%2Fdsh-user-mirror?style=flat-square&color=6d7f9c&label=downloads" alt="downloads" /></a>
+  <img src="https://img.shields.io/badge/DSH-%E2%89%A50.1.1--rc.2-4d6bfe?style=flat-square" alt="DSH" />
+  <img src="https://img.shields.io/badge/runtime_deps-1-5A9E6F?style=flat-square" alt="deps" />
+  <img src="https://img.shields.io/badge/license-MIT-777?style=flat-square" alt="MIT" />
 </p>
 
----
+<p align="center">
+  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=flat-square" alt="DSH Plugin" /></a>
+  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=flat-square" alt="dsh-plugin" /></a>
+  <a href="https://github.com/topics/ai-memory"><img src="https://img.shields.io/badge/topic-ai--memory-8b5cf6?style=flat-square" alt="ai-memory" /></a>
+  &nbsp;·&nbsp; <a href="CHANGELOG.md">更新日志</a> · <a href="DEV_NOTES.md">开发笔记</a>
+</p>
+
+<p align="center">
+  <img src="https://img.webkubor.online/dsh-user-mirror/mirror-portrait.png" alt="记忆 tab：AI 眼中的你 —— 一句话速写、四类判断、每条被印证过几次" width="100%" />
+  <br />
+  <sub><b>记忆 tab</b> —— 不是一份记录列表，是一张画像：一句话速写、四类判断分区、<br/>
+  红线单独成块，每条判断的字重就是它被印证的次数。</sub>
+</p>
+
+## 装它和不装它的区别
+
+| | 不装 | dsh-user-mirror |
+|---|---|---|
+| 换一个会话 | 你的原则要**重讲一遍** | **自动注入，模型已经知道** |
+| 模型到底记了什么 | 不透明，只能猜 | **记忆 tab 里一条条列出来** |
+| 它凭什么记这条 | 无从追溯 | **每条都带理由，点开就看到** |
+| 记多了会不会塞爆上下文 | 会 | **按 token 预算注入，不按条数** |
+| 记错了怎么办 | 只能重开会话 | **点一下撤掉** |
+| 过时的偏好 | 一直留着误导模型 | **会遗忘 —— 30 天没被印证就进淡忘区** |
 
 ## 这是什么
 
@@ -47,6 +72,19 @@ v0.4 之前是用正则扫模型的 reasoning 流，找「用户偏好…」这�
 「这算长期原则还是一次性请求」是判断，正则是手脚，手脚做不了这个判断。所以改成
 模型自己判断、主动调用工具 —— 顺带解决了可解释性：**每次记录都发生在对话里，看得见，
 每条都带理由**，而不是背后悄悄写。
+
+## 记忆 tab 长什么样
+
+安装后，「对话 / 轨迹」后面会多一个**「记忆」tab**。它不是一份记录清单，是一张画像：
+
+- **一句话速写** —— 顶部直接给出「被印证最多的那条判断」，那就是模型眼里最认定你的一条
+- **四类分区** —— 红线单独成块（越界有代价，且不参与遗忘），原则是主体，工作方式与审美压成两栏
+- **强度就是字重** —— 被印证越多的判断字越重越实，弱的退成灰字；不显示「强度 3.7」这种对人没意义的数字
+- **证据折在判断里** —— 正面只放抽象后的判断，点「看是哪几次」才展开它从哪些具体事件来的
+- **正在淡忘** —— 30 天没被印证的判断进折叠区，让「会遗忘」这件事看得见
+- 每条可以点 `✕` 撤掉。两段式：第一下只变成「确认撤掉？」，再点才真删 ——
+  删除端点只认 DELETE/POST，`GET` 一律 405，免得被浏览器预取或前进后退重放误删
+- 一颗 [ai-orb](https://github.com/webkubor/ai-orb) 状态球会表态：读取中 / 刷新中 / 刚记下（带角标）/ 失败
 
 ## 记忆模型：有结构、会遗忘
 
@@ -120,22 +158,6 @@ storageDomain, webServer)` 并让整个 boot 失败 —— 前者是记忆持久
         sectionOrder: 160    # system prompt 里的位置（越小越靠前）
 ```
 
-## UI
-
-安装后，「对话 / 轨迹」后面会多一个**「记忆」tab**：
-
-- 每条记忆展示 分类 + 内容 + **为什么记** + 强度/确认次数/最后确认时间
-- 每条右侧有 `✕` 可以撤掉它。两段式：第一下只变成「确认撤掉？」，再点才真删 ——
-  删除端点只认 DELETE/POST，`GET` 一律 405，免得被浏览器预取或前进后退重放误删
-- 一个可展开的说明面板，直接回答「什么时候记？记哪些？为什么会忘？」
-- 一颗 [ai-orb](https://github.com/webkubor/ai-orb) 状态球，会表态：
-  拉取中 `thinking` / 刷新中 `working`（环在转）/ 刚记下 `done` + 角标显示记了几条 / 失败 `error`
-- 数据来自 host 端 `/dsh-mirror/preferences`
-
-球用的是 npm 上的 ai-orb 本体，不是抄一份进来：host 端把 `node_modules/ai-orb/src`
-按同源静态资源下发（`/dsh-mirror/vendor/ai-orb/`），client 端 `import()` 它。
-升级 ai-orb 只需升依赖，没有副本要同步。
-
 ## 工具
 
 - `mirror_remember(text, kind, reason)` —— 记下一条判断依据
@@ -145,96 +167,6 @@ storageDomain, webServer)` 并让整个 boot 失败 —— 前者是记忆持久
 就是第二条读路径，白占常驻 token。v0.6 把原来的 `mirror_preferences` 换成了
 `mirror_forget` —— 只能写不能撤的话，一条记错的东西要么等半个月衰减掉、要么等同主题
 新说法覆盖它（而中文同义换词还会漏检），这期间它一直污染每一轮的系统提示。
-
-## 开发笔记：`@deepseek-ai/*` 必须放 peerDependencies，否则 DSH 全站工具调用崩
-
-**这是本插件造成过的最严重事故，务必别再犯。**
-
-把 `@deepseek-ai/dsh-tools` 这类包写进 `dependencies`，安装后 profile 的
-`node_modules` 里就会多出第二份。而 DSH 的工具调度句柄是用模块内私有的
-`Symbol()`（不是 `Symbol.for()`）做 key 的：
-
-```js
-// dsh-tools/lib/index.js
-const TOOL_RUNTIME_SCHEDULER = Symbol("@deepseek-ai/dsh-tools.scheduler")
-// dsh-agent-loop/lib/index.js:193
-const prepared = await ctx.tools[TOOL_RUNTIME_SCHEDULER].prepare(call.exec)
-```
-
-两份 `dsh-tools` = 两个不相等的 Symbol = 读出来是 `undefined`，于是**每一次工具调用**
-都炸成 `UNKNOWN: Cannot read properties of undefined (reading 'prepare')`。更糟的是
-这一轮会留下没有响应的 `tool_calls`，下一轮直接被上游 API 拒绝
-（`assistant message with 'tool_calls' must be followed by tool messages`），
-整个会话废掉。
-
-而且**孤儿包也算**：profile 的 `package.json` 依赖为空、`bundles` 里也没有这个插件，
-只要 `node_modules/@deepseek-ai/` 还残留着，照样全崩。所以卸载插件并不够。
-
-正确写法照抄官方生态插件 `dsh-context`：`dependencies` 留空或只放真正的第三方库，
-所有 `@deepseek-ai/*` 加上 `react` / `zod` 一律进 `peerDependencies`。
-
-已存量的救急办法是把重复目录换成指向宿主那份的软链（Node 按 realpath 去重，
-就收敛回单实例）：
-
-```bash
-G=$(npm root -g)/@deepseek-ai/dsh/node_modules/@deepseek-ai
-W=~/.dsh/profiles/web/node_modules/@deepseek-ai
-for p in dsh-tools dsh-storage-domain dsh-system-prompt schemastery cosmokit; do
-  rm -rf "$W/$p" && ln -s "$G/$p" "$W/$p"
-done
-# 验证两边 realpath 一致
-```
-
-已报给上游：<https://github.com/deepseek-ai/deepseek-harness/discussions/4640>
-
-## 开发笔记：别在自己正在用的 profile 上试未验证的代码
-
-插件 `apply` 里抛错**会让整个 plugin tree 加载失败**，DSH 随即降级启动 ——
-web 服务还在（页面能打开），但模型列表、会话历史这些插件全没上来，看起来像「数据丢了」。
-
-所以改完先在一个不影响日常使用的 profile 上验证 boot 能过，再动天天在用的那个。
-最省事的冒烟测试是 `dsh --profile <name> --help`：它需要 app 实例才能列出 flags，
-所以 boot 阶段的错误会在这一步就暴露，不用花 API 额度。
-
-⚠️ 本插件的例外：它依赖 `storageDomain` + `webServer`，headless 上装不了（见上文），
-所以只能在 web 上验证 —— 那就更要先 `--help` 冒烟一遍。
-
-## 开发笔记：client 半侧有**两层** inject，别混
-
-写 DSH client 插件最容易踩的坑 —— 报错长这样：
-
-```
-cannot get property "slots" without inject
-```
-
-明明 `package.json` 里写了 `dsh.client.inject`，却还是抛。因为那是**另一层**：
-
-| 位置 | 写什么 | 作用 |
-|---|---|---|
-| `package.json` → `dsh.client.inject` | **包名** | informational —— 只是加载/预取元数据，**不做服务守卫、也不排 apply 顺序** |
-| client 模块 → `exports.inject` | **服务名** | cordis fiber inject，真正的服务访问守卫 |
-
-DSH 自己的 `dsh-client-ui-workspace` 在源码注释里写明了这点：
-
-> `dsh.client.inject` edges are informational (loading/prefetch metadata, never apply
-> sequencing) … apply therefore depends on each slot declaration through `slots.inject()`
-> instead of assuming order.
-
-所以两条规矩：
-
-1. **访问 `ctx.<service>` 前，必须在 client 模块上 `exports.inject = ['slots', ...]`。**
-2. **注册 slot 要走 `ctx.slots.inject('<slot-name>', () => ctx.slots.register(...))`**，
-   不要 `ctx.effect(() => ctx.slots.register(...))`。目标 slot（如 `conversation.view`）
-   由 ui-conversation 声明，激活顺序不保证；假定顺序的话，即使补了 `exports.inject`
-   也可能静默不挂载 —— 不报错，tab 就是不出现，比直接崩更难查。
-
-另外 `dsh.client.immediately: true` 只适合**无服务依赖的纯 DOM 插件**（如换皮肤）。
-要等服务的插件不该抢跑，官方带 inject 的插件都没有它。
-
-改了 `dsh.client` 这一段属于 boot graph 层面，**必须重启 DSH 才生效**（改 JS 逻辑则只需
-重新部署 + 刷新页面）。重启后旧标签页里的 bundle 请求会落在服务重启窗口内、`<script>`
-onerror 之后不会自动重试，表现成「某个插件 failed to load / 一直加载中」——
-硬刷新（Cmd+Shift+R）即可，不是真的坏了。
 
 ## 隐私
 

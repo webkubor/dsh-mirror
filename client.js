@@ -16,7 +16,12 @@ window.__ModuleLoader__.load({
     Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' })
 
     const CSS = `
-      .dsh-mirror-view { padding: 20px 20px 28px; font-size: 13px; line-height: 1.6; height: 100%; overflow: auto; }
+      .dsh-mirror-view {
+        padding: 20px 20px 120px; font-size: 13px; line-height: 1.6; height: 100%; overflow: auto;
+      }
+      /* 限宽居中 —— 超宽屏上铺满会把每行拉到 100+ 字，判断本身就读不下去了；
+         底部留出输入框的高度，否则最后一条永远被压在下面。 */
+      .dsh-mirror-view > * { max-width: 860px; margin-left: auto; margin-right: auto; }
 
       /* 入场：判断依次浮起，不是一次性糊上来 */
       @keyframes dmr-rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: none; } }
@@ -136,9 +141,9 @@ window.__ModuleLoader__.load({
         display: flex; align-items: center; gap: 9px; flex-wrap: wrap;
       }
       /* 印证次数：小横条比圆点更有“计量”感 */
-      .dmr-dots { display: inline-flex; gap: 2.5px; }
+      .dmr-dots { display: inline-flex; gap: 3px; }
       .dmr-dots i {
-        width: 9px; height: 3px; border-radius: 2px; display: block;
+        width: 10px; height: 4px; border-radius: 2px; display: block;
         background: linear-gradient(90deg, #C08A3E, #D9A257);
       }
       .dmr-dots i.off { background: var(--dsw-alias-border-l2, rgba(0,0,0,.1)); }

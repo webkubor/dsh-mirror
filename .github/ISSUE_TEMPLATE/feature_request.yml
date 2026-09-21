@@ -1,0 +1,20 @@
+name: 功能建议
+description: 新分类 / 新导出格式 / Memory tab 改进
+labels: [enhancement]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: 想要什么
+    validations: { required: true }
+  - type: textarea
+    id: why
+    attributes:
+      label: 解决什么问题
+      description: 当前是怎么不够用的
+    validations: { required: true }
+  - type: markdown
+    attributes:
+      value: |
+        记忆容量上限、同主题合并算法、注入 token 预算都在
+        [`cordis.patch.yml`](../../blob/main/cordis.patch.yml) 里可改，详见 [README「配置」](../../blob/main/README.md#配置)。

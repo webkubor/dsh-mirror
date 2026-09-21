@@ -1,0 +1,39 @@
+name: Bug 反馈
+description: 记忆没存 / 错配 / 撤销失败 / 注入错乱
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        提之前先看 [README「已知限制」](../../blob/main/README.md#已知限制改写幅度大的中文同义句会被记成两条)——
+        中文换词漏检是已知设计取舍（bigram 只看字面重叠），不是 bug。
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 问题类型
+      options:
+        - 记忆没被存下
+        - 同主题没合并（被记成两条）
+        - 撤销失败
+        - 注入到 system prompt 后表现不对
+        - Memory tab 显示异常
+        - 其它
+    validations: { required: true }
+  - type: textarea
+    id: what
+    attributes:
+      label: 现象
+      description: 记了哪句话？期望的合并/撤销行为是什么？实际看到的是什么？
+    validations: { required: true }
+  - type: input
+    id: versions
+    attributes:
+      label: 版本
+      placeholder: dsh-user-mirror 0.7.0 / dsh 0.1.5-rc.2
+    validations: { required: true }
+  - type: textarea
+    id: logs
+    attributes:
+      label: 浏览器控制台 / 启动日志
+      description: 注入/读取路径报错最关键
+      render: text

@@ -132,6 +132,16 @@ headless profile 两个服务都没有，插件会停在 `pending (waiting for s
 storageDomain, webServer)` 并让整个 boot 失败 —— 前者是记忆持久化的根基，
 后者是「记忆」tab 取数据的通道。
 
+### 关于 ai-orb 的 vendoring
+
+唯一运行时依赖是 [ai-orb](https://github.com/webkubor/ai-orb)（SVG 状态球，零依赖）。
+声明为 `dependencies` 但**不会被打进客户端 bundle**——client 端通过
+`import('/dsh-mirror/vendor/ai-orb/index.js')` 同源加载，路径由 host 侧把
+`node_modules/ai-orb/src/` 整目录以 `/dsh-mirror/vendor/ai-orb` 这个静态路由下发。
+
+为什么不直接 bundle：状态球会被多个页面同时实例化，单独 ESM 模块走 HTTP/2 多路复用，
+首屏不阻塞；而且 ai-orb 升级只需 `pnpm update ai-orb`，没有任何手抄副本需要同步。
+
 ## 怎么工作
 
 1. 模型看到系统提示里已有的记忆（按强度排序、受 token 预算约束）

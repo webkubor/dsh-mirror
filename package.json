@@ -1,6 +1,6 @@
 {
   "name": "@dsh-plugins/dsh-user-mirror",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "Let the AI know you. 让模型主动记下你的判断依据（原则/红线/工作方式），跨会话复用 —— 有容量、会遗忘、每条都说得出为什么记。",
   "type": "module",
   "main": "index.js",

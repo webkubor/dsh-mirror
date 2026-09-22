@@ -282,14 +282,23 @@ window.__ModuleLoader__.load({
     /** 「刚记过」的表态窗口：这段时间内球显示 done + 角标。 */
     const LEARNED_WINDOW_MS = 60 * 1000
 
-    /** 球的中文无障碍文案（ai-orb 默认是英文）。 */
-    const ORB_LABELS = {
-      idle: 'dsh-mirror · 待命',
-      thinking: 'dsh-mirror · 正在读记忆',
-      working: 'dsh-mirror · 正在刷新',
-      done: 'dsh-mirror · 刚记下新偏好',
-      error: 'dsh-mirror · 读取失败',
+    /** 浏览器语言：中文浏览器显示中文，其余语言显示英文。 */
+    const IS_ZH = /^zh(?:-|$)/i.test(navigator.language || '')
+    const TEXT = {
+      zh: {
+        orb: { idle: '待命', thinking: '正在读记忆', working: '正在刷新', done: '刚记下新偏好', error: '读取失败' },
+        kinds: { redline: '红线', principle: '原则 / 取舍', workflow: '工作方式', taste: '审美 / 表达' },
+        justNow: '刚刚', minute: '分钟前', hour: '小时前', day: '天前', active: '条判断在生效', redlines: '条红线不衰减', fading: '条正在淡忘', recent: '最近一次印证 '
+      },
+      en: {
+        orb: { idle: 'idle', thinking: 'reading memory', working: 'refreshing', done: 'new preference learned', error: 'read failed' },
+        kinds: { redline: 'Red lines', principle: 'Principles / trade-offs', workflow: 'Workflow', taste: 'Taste / expression' },
+        justNow: 'just now', minute: ' min ago', hour: ' hr ago', day: ' days ago', active: ' active judgments', redlines: ' red lines never fade', fading: ' fading', recent: 'Last confirmed '
+      }
     }
+    const T = IS_ZH ? TEXT.zh : TEXT.en
+    const tr = (zh, en) => IS_ZH ? zh : en
+    const ORB_LABELS = Object.fromEntries(Object.entries(T.orb).map(([key, value]) => [key, 'dsh-mirror · ' + value]))
 
     /**
      * 把当前视图状态映射成球的表情。
@@ -320,19 +329,19 @@ window.__ModuleLoader__.load({
     function timeAgo(ts) {
       const diff = Date.now() - ts
       const day = 24 * 60 * 60 * 1000
-      if (diff < 60 * 1000) return '刚刚'
-      if (diff < 60 * 60 * 1000) return Math.floor(diff / 60000) + ' 分钟前'
-      if (diff < day) return Math.floor(diff / 3600000) + ' 小时前'
-      return Math.floor(diff / day) + ' 天前'
+      if (diff < 60 * 1000) return T.justNow
+      if (diff < 60 * 60 * 1000) return Math.floor(diff / 60000) + T.minute
+      if (diff < day) return Math.floor(diff / 3600000) + T.hour
+      return Math.floor(diff / day) + T.day
     }
 
     /** 四类的展示顺序与中文名 —— 红线排最前，它是唯一越界有代价的一类。 */
     const KIND_ORDER = ['redline', 'principle', 'workflow', 'taste']
     const KIND_LABEL = {
-      redline: '红线',
-      principle: '原则 / 取舍',
-      workflow: '工作方式',
-      taste: '审美 / 表达',
+      redline: T.kinds.redline,
+      principle: T.kinds.principle,
+      workflow: T.kinds.workflow,
+      taste: T.kinds.taste,
     }
 
     /** 超过这个时间没被印证，就算「正在淡忘」——与 host 端半衰期同数量级。 */
@@ -372,10 +381,10 @@ window.__ModuleLoader__.load({
 
     /** 画像速写下面那行：如实报数，不编。 */
     function summaryLine(d, now) {
-      const parts = ['共 ' + d.live.length + ' 条判断在生效']
-      if (d.byKind.redline.length) parts.push(d.byKind.redline.length + ' 条红线不衰减')
-      if (d.fading.length) parts.push(d.fading.length + ' 条正在淡忘')
-      if (d.live.length) parts.push('最近一次印证 ' + timeAgo(d.live[0].lastSeenAt))
+      const parts = [d.live.length + T.active]
+      if (d.byKind.redline.length) parts.push(d.byKind.redline.length + T.redlines)
+      if (d.fading.length) parts.push(d.fading.length + T.fading)
+      if (d.live.length) parts.push(T.recent + timeAgo(d.live[0].lastSeenAt))
       return parts.join(' · ')
     }
 
@@ -497,19 +506,19 @@ window.__ModuleLoader__.load({
           React.createElement('div', {
             style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: '10px' },
           },
-            React.createElement('div', { className: 'dmr-eyebrow' }, 'AI 眼中的你'),
+            React.createElement('div', { className: 'dmr-eyebrow' }, tr('AI 眼中的你', 'You through AI eyes')),
             React.createElement('button', {
               className: 'dsh-mirror-refresh',
               onClick: () => load(true),
               disabled: state.refreshing,
-            }, state.refreshing ? '刷新中…' : '刷新'),
+              }, state.refreshing ? tr('刷新中…', 'Refreshing…') : tr('刷新', 'Refresh')),
           ),
           // 速写取最强那条 —— 它就是模型眼里最认定你的判断，不编人格描述
           top
             ? React.createElement('p', { className: 'dmr-sketch' },
-                '被印证最多的判断是 ',
+                tr('被印证最多的判断是 ', 'Most confirmed judgment: '),
                 React.createElement('b', null, '「' + top.text + '」'))
-            : React.createElement('p', { className: 'dmr-sketch' }, '还没有足够的判断来描出你'),
+            : React.createElement('p', { className: 'dmr-sketch' }, tr('还没有足够的判断来描出你', 'Not enough judgments to sketch you yet')),
           React.createElement('div', { className: 'dmr-sketch-note' }, summaryLine(d, now)),
           // 四类强度计
           React.createElement('div', { className: 'dmr-meters' },
@@ -536,27 +545,27 @@ window.__ModuleLoader__.load({
       // 「它到底什么时候记、记什么」——不写清楚，这一栏对人就是个黑盒
       const kinds = state.kinds || {}
       const how = React.createElement('details', { className: 'dsh-mirror-how' },
-        React.createElement('summary', null, '它什么时候记？记哪些？为什么会忘？'),
+        React.createElement('summary', null, tr('它什么时候记？记哪些？为什么会忘？', 'When does it remember, what does it keep, and why does it forget?')),
         React.createElement('dl', null,
-          React.createElement('dt', null, '什么时候记'),
+          React.createElement('dt', null, tr('什么时候记', 'When it remembers')),
           React.createElement('dd', null,
             '模型自己判断。它意识到你表达了一条可复用的判断依据时，会调用 ',
             React.createElement('code', null, 'mirror_remember'),
             ' —— 所以每次记录都出现在对话里，看得见，不是背后偷偷写的。'),
-          React.createElement('dt', null, '记哪些'),
+          React.createElement('dt', null, tr('记哪些', 'What it keeps')),
           ...Object.keys(kinds).length
             ? Object.entries(kinds).map(([k, desc]) =>
                 React.createElement('dd', { key: k },
                   React.createElement('code', null, k), ' ', desc))
-            : [React.createElement('dd', { key: 'na' }, '原则 / 红线 / 工作方式 / 表达偏好')],
-          React.createElement('dt', null, '不记哪些'),
+            : [React.createElement('dd', { key: 'na' }, tr('原则 / 红线 / 工作方式 / 表达偏好', 'Principles / red lines / workflow / expression preferences'))],
+          React.createElement('dt', null, tr('不记哪些', 'What it does not keep')),
           React.createElement('dd', null,
             '一次性请求（那是任务不是原则）、客观事实（路径账号服务器——那些另有真源，' +
             '这里再存一份就会互相打架）、以及模型自己的猜测。'),
-          React.createElement('dt', null, '怎么更新'),
+          React.createElement('dt', null, tr('怎么更新', 'How it updates')),
           React.createElement('dd', null,
             '同一主题有新说法就覆盖旧的，不新增近义条目；每次被再次确认，强度 +1。'),
-          React.createElement('dt', null, '为什么会忘'),
+          React.createElement('dt', null, tr('为什么会忘', 'Why it forgets')),
           React.createElement('dd', null,
             '强度 = 确认次数 × 时间衰减（半衰期 30 天），容量封顶后淘汰最弱的一条。' +
             '人脑不能无限递增，这里也一样 —— 只收判断依据不收事实，量本来就有限。'),
@@ -572,22 +581,22 @@ window.__ModuleLoader__.load({
             React.createElement('p', { className: 't', style: { flex: 1 } }, m.text),
             React.createElement('button', {
               className: 'dmr-forget' + (confirming ? ' is-confirming' : ''),
-              title: confirming ? '再点一次就真的撤掉' : '撤掉这条',
+              title: confirming ? tr('再点一次就真的撤掉', 'Click again to remove') : tr('撤掉这条', 'Remove this item'),
               onClick: () => (confirming ? forget(m.id) : setPendingForget(m.id)),
               onBlur: () => confirming && setPendingForget(null),
-            }, confirming ? '确认撤掉？' : '✕'),
+            }, confirming ? tr('确认撤掉？', 'Confirm removal?') : '✕'),
           ),
           React.createElement('div', { className: 'dmr-evid' },
             React.createElement('span', { className: 'dmr-dots', 'aria-hidden': 'true' },
               [0, 1, 2, 3, 4].map((i) =>
                 React.createElement('i', { key: i, className: i < Math.min(m.hits, 5) ? '' : 'off' }))),
-            React.createElement('span', null, m.hits + ' 次印证'),
+            React.createElement('span', null, m.hits + tr(' 次印证', ' confirmations')),
             m.reason
               ? React.createElement('button', {
                   className: 'dmr-why-btn',
                   'aria-expanded': open ? 'true' : 'false',
                   onClick: () => setOpenWhy(open ? null : m.id),
-                }, open ? '收起' : '看是哪几次')
+                }, open ? tr('收起', 'Collapse') : tr('看是哪几次', 'See evidence'))
               : null,
             React.createElement('span', { className: 'dmr-spacer' }),
             React.createElement('span', null, timeAgo(m.lastSeenAt)),
@@ -632,23 +641,23 @@ window.__ModuleLoader__.load({
 
       let content
       if (state.loading) {
-        content = React.createElement('div', { className: 'dsh-mirror-empty' }, '加载中…')
+        content = React.createElement('div', { className: 'dsh-mirror-empty' }, tr('加载中…', 'Loading…'))
       } else if (state.error) {
-        content = React.createElement('div', { className: 'dsh-mirror-empty' }, '加载失败：' + state.error)
+        content = React.createElement('div', { className: 'dsh-mirror-empty' }, tr('加载失败：', 'Load failed: ') + state.error)
       } else if (state.memories.length === 0) {
         content = React.createElement('div', { className: 'dsh-mirror-empty' },
-          '还没有任何记忆。等你下次表达出某条原则或取舍时，模型会当场用 mirror_remember 记下来 —— 你会在对话里看到它记了什么。')
+          tr('还没有任何记忆。等你下次表达出某条原则或取舍时，模型会当场用 mirror_remember 记下来 —— 你会在对话里看到它记了什么。', 'No memories yet. When you express a reusable principle or trade-off, the model will record it with mirror_remember — you will see what it remembers in the conversation.'))
       } else {
         const cols = (d.byKind.workflow.length || d.byKind.taste.length)
           ? React.createElement('div', { className: 'dmr-cols' }, plainList('workflow'), plainList('taste'))
           : null
         content = React.createElement('div', null,
-          section('redline', '越界有代价，永不衰减') ? React.createElement('div', null,
+          section('redline', tr('越界有代价，永不衰减', 'Crossing the line has a cost; never fades')) ? React.createElement('div', null,
             React.createElement('hr', { className: 'dmr-rule' }),
-            section('redline', '越界有代价，永不衰减')) : null,
+            section('redline', tr('越界有代价，永不衰减', 'Crossing the line has a cost; never fades'))) : null,
           d.byKind.principle.length ? React.createElement('div', null,
             React.createElement('hr', { className: 'dmr-rule' }),
-            section('principle', '字越重 = 被越多次印证')) : null,
+            section('principle', tr('字越重 = 被越多次印证', 'Heavier text = confirmed more often'))) : null,
           cols ? React.createElement('div', null,
             React.createElement('hr', { className: 'dmr-rule' }), cols) : null,
           d.fading.length ? React.createElement('div', null,
@@ -742,7 +751,7 @@ window.__ModuleLoader__.load({
                         className: 'dmr-suite-btn',
                         onClick: () => handleCopy(item.pkg),
                         title: `复制命令: dsh plugin install ${item.pkg}`
-                      }, copied === item.pkg ? '✓ 已复制!' : '⚡ 复制安装'),
+                      }, copied === item.pkg ? tr('✓ 已复制!', '✓ Copied!') : tr('⚡ 复制安装', '⚡ Copy install')), 
                   React.createElement('a', {
                     href: item.repo,
                     target: '_blank',
@@ -778,7 +787,7 @@ window.__ModuleLoader__.load({
             name: 'conversation.view',
             id: 'memory',
             order: 20,
-            label: () => '记忆',
+            label: () => tr('记忆', 'Memory'),
           },
           MemoryView,
         ),

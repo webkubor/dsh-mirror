@@ -184,6 +184,19 @@ storageDomain, webServer)` 并让整个 boot 失败 —— 前者是记忆持久
 - 不联网、不上传
 - 想清空？删除 `dsh_mirror` domain 即可
 
+## 🧩 Webkubor DSH 精选扩展家族 (Plugin Suite)
+
+打造极致的 DeepSeek Harness 开发者与用户套件：
+
+| 插件 | 领域 | 核心功能 | 快速安装 |
+| :--- | :--- | :--- | :--- |
+| [🎨 **dsh-bloom-theme**](https://github.com/webkubor/dsh-bloom-theme) | 主题美化 | 现代毛玻璃美学、暗黑/亮色自适应与 20+ 精选艺术壁纸 | `dsh plugin install @dsh-plugins/dsh-bloom-theme` |
+| [⚡ **dsh-llm-hub**](https://github.com/webkubor/dsh-llm-hub) | 智能路由 | 多模型厂商聚合、秒级切换与故障智能重试 | `dsh plugin install @dsh-plugins/dsh-llm-hub` |
+| [🪞 **dsh-user-mirror**](https://github.com/webkubor/dsh-mirror) | 角色记忆 | 用户数字画像、习惯偏好与记忆沉淀网络 | `dsh plugin install @dsh-plugins/dsh-user-mirror` |
+| [🖥️ **dsh-env-inspector**](https://github.com/webkubor/dsh-env-inspector) | 运行环境 | 活跃端口一键释放、CLI 工具链与开发凭据大屏 | `dsh plugin install @dsh-plugins/dsh-env-inspector` |
+
+---
+
 ## License
 
 MIT © [webkubor](https://github.com/webkubor)

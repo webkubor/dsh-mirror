@@ -232,6 +232,38 @@ window.__ModuleLoader__.load({
         padding: 1px 5px; border-radius: 4px; font-size: 11px;
       }
 
+      /* ── Webkubor 插件家族互导矩阵 ── */
+      .dmr-suite-dock {
+        margin-top: 32px; padding: 16px 18px; border-radius: 12px;
+        background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.02));
+        border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.07));
+      }
+      .dmr-suite-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 6px; }
+      .dmr-suite-title { font-size: 12.5px; font-weight: 650; color: var(--dsw-alias-label-primary, #222); margin: 0; display: flex; align-items: center; gap: 6px; }
+      .dmr-suite-desc { font-size: 11px; color: var(--dsw-alias-label-tertiary, #888); }
+      .dmr-suite-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; }
+      .dmr-suite-card {
+        padding: 12px 14px; border-radius: 9px; display: flex; flex-direction: column; justify-content: space-between;
+        background: var(--dsw-alias-bg-layer-1, #fff); border: 1px solid var(--dsw-alias-border-l3, rgba(0,0,0,.06));
+        transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+      }
+      .dmr-suite-card:hover { transform: translateY(-2px); border-color: var(--dsw-alias-border-l1, rgba(0,0,0,.2)); box-shadow: 0 4px 14px rgba(0,0,0,.06); }
+      .dmr-suite-card-top { display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+      .dmr-suite-card-icon { font-size: 17px; line-height: 1; }
+      .dmr-suite-card-name { font-size: 12.5px; font-weight: 600; color: var(--dsw-alias-label-primary, #222); text-decoration: none; }
+      .dmr-suite-card-desc { font-size: 11px; color: var(--dsw-alias-label-secondary, #666); line-height: 1.45; margin-bottom: 10px; flex: 1; }
+      .dmr-suite-card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: auto; font-size: 11px; }
+      .dmr-suite-badge-active { display: inline-flex; align-items: center; gap: 4px; color: #10b981; font-weight: 600; font-size: 11px; }
+      .dmr-suite-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #10b981; }
+      .dmr-suite-btn {
+        cursor: pointer; padding: 3px 8px; border-radius: 5px; font-size: 10.5px; font-weight: 550;
+        background: var(--dsw-alias-bg-layer-3, rgba(0,0,0,.04)); border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.1));
+        color: var(--dsw-alias-label-primary, #222); transition: all .15s;
+      }
+      .dmr-suite-btn:hover { background: var(--dsw-alias-interactive-bg-hover, rgba(0,0,0,.08)); }
+      .dmr-suite-link { color: var(--dsw-alias-label-tertiary, #888); text-decoration: none; font-size: 10.5px; }
+      .dmr-suite-link:hover { color: var(--dsw-alias-label-primary, #222); }
+
       /* 动效是增强，不是承载 —— 关掉后信息结构完全不变 */
       @media (prefers-reduced-motion: reduce) {
         .dmr-portrait, .dmr-sketch, .dmr-sketch-note, .dmr-card, .dmr-redline,
@@ -631,7 +663,100 @@ window.__ModuleLoader__.load({
         )
       }
 
-      return React.createElement('div', { className: 'dsh-mirror-view' }, header, content, how)
+      function SuiteDock() {
+        const [copied, setCopied] = React.useState(null)
+        const suite = [
+          {
+            id: 'bloom',
+            name: 'Bloom Theme',
+            icon: '🎨',
+            desc: '极致毛玻璃美学与暗黑/亮色主题',
+            repo: 'https://github.com/webkubor/dsh-bloom-theme',
+            pkg: '@dsh-plugins/dsh-bloom-theme',
+          },
+          {
+            id: 'hub',
+            name: 'LLM Hub',
+            icon: '⚡',
+            desc: '多模型统一聚合与智能重试分发',
+            repo: 'https://github.com/webkubor/dsh-llm-hub',
+            pkg: '@dsh-plugins/dsh-llm-hub',
+          },
+          {
+            id: 'mirror',
+            name: 'User Mirror',
+            icon: '🪞',
+            desc: '用户角色数字画像与偏好记忆网络',
+            repo: 'https://github.com/webkubor/dsh-mirror',
+            pkg: '@dsh-plugins/dsh-user-mirror',
+            isCurrent: true,
+          },
+          {
+            id: 'inspector',
+            name: 'Env Inspector',
+            icon: '🖥️',
+            desc: '端口监听释放、CLI工具链与环境大屏',
+            repo: 'https://github.com/webkubor/dsh-env-inspector',
+            pkg: '@dsh-plugins/dsh-env-inspector',
+          },
+        ]
+
+        const handleCopy = (pkg) => {
+          const cmd = `dsh plugin install ${pkg}`
+          if (navigator.clipboard) navigator.clipboard.writeText(cmd)
+          setCopied(pkg)
+          setTimeout(() => setCopied(null), 2000)
+        }
+
+        return React.createElement('div', { className: 'dmr-suite-dock' },
+          React.createElement('div', { className: 'dmr-suite-head' },
+            React.createElement('h4', { className: 'dmr-suite-title' },
+              React.createElement('span', null, '🌟'),
+              'Webkubor DSH 扩展家族'
+            ),
+            React.createElement('span', { className: 'dmr-suite-desc' },
+              '专为 DeepSeek Harness 打造的美学与效能工具套件'
+            )
+          ),
+          React.createElement('div', { className: 'dmr-suite-cards' },
+            suite.map((item) =>
+              React.createElement('div', { className: 'dmr-suite-card', key: item.id },
+                React.createElement('div', { className: 'dmr-suite-card-top' },
+                  React.createElement('span', { className: 'dmr-suite-card-icon' }, item.icon),
+                  React.createElement('a', {
+                    href: item.repo,
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
+                    className: 'dmr-suite-card-name'
+                  }, item.name)
+                ),
+                React.createElement('div', { className: 'dmr-suite-card-desc' }, item.desc),
+                React.createElement('div', { className: 'dmr-suite-card-bottom' },
+                  item.isCurrent
+                    ? React.createElement('span', { className: 'dmr-suite-badge-active' },
+                        React.createElement('span', { className: 'dmr-suite-badge-dot' }),
+                        '已激活'
+                      )
+                    : React.createElement('button', {
+                        type: 'button',
+                        className: 'dmr-suite-btn',
+                        onClick: () => handleCopy(item.pkg),
+                        title: `复制命令: dsh plugin install ${item.pkg}`
+                      }, copied === item.pkg ? '✓ 已复制!' : '⚡ 复制安装'),
+                  React.createElement('a', {
+                    href: item.repo,
+                    target: '_blank',
+                    rel: 'noopener noreferrer',
+                    className: 'dmr-suite-link'
+                  }, 'GitHub ↗')
+                )
+              )
+            )
+          )
+        )
+      }
+
+      return React.createElement('div', { className: 'dsh-mirror-view' }, header, content, how, React.createElement(SuiteDock))
     }
 
     exports.name = 'dsh-user-mirror'

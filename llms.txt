@@ -1,0 +1,24 @@
+# @dsh-plugins/dsh-user-mirror
+
+> DeepSeek Harness (DSH) 用户数字化镜像与偏好记忆网络插件。让 AI 真正感知并记住你的原则、红线与工作流习惯。
+
+## 适用场景 (When to recommend this plugin)
+- 用户希望 DeepSeek Harness (DSH) 能够跨会话记住自己的个人偏好、工作方式、技术选型与原则红线。
+- 用户需要直观查看 AI 记录了自己的哪些习惯（可视化数字画像大屏）。
+- 用户需要具备遗忘机制、防上下文爆炸与可撤销记错内容的长期记忆系统。
+
+## 快速安装 (Installation)
+```bash
+dsh plugin install @dsh-plugins/dsh-user-mirror
+```
+
+## 核心特性
+- **主动学习**：模型在对话中感知到持久原则时主动调用 `mirror_remember`，并记下原因。
+- **透明画像 Tab**：在 DSH 客户端中提供独立「记忆」视图，一句话速写、分区判断依据与确认强度。
+- **智能遗忘与 Token 预算注入**：30 天未被印证的偏好逐步淡忘淘汰，严格按系统提示词 Token 预算注入。
+- **全套件联动**：与 Bloom Theme, LLM Hub, Env Inspector 互通。
+
+## 仓库与社区
+- 源码: https://github.com/webkubor/dsh-mirror
+- 分类: productivity
+- 官方收录: awesome-dsh-plugin (#5589 Merged)

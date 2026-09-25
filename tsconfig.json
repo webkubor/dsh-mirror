@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022", "DOM"],
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "strict": false,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "typeRoots": [
+      "./types",
+      "../dsh-bloom-theme/node_modules/@types"
+    ],
+    "types": ["node"]
+  },
+  "include": [
+    "types/**/*.d.ts",
+    "index.js"
+  ]
+}

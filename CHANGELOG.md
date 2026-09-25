@@ -2,6 +2,13 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.7.2] - 2026-09-26
+
+### 🏷️ 完整 TypeScript 类型支持
+
+- **类型定义导出**：新增 `types/index.d.ts`，导出完整的记忆契约（`MemoryItem`、`MemoryKind`、`strengthOf`、`findSimilar` 等核心算法定义）。
+- **工程统一规范**：补充 `npm run check` 静态语法巡检与 `tsconfig.json`。
+
 ## [0.7.0] - 2026-09-18
 
 ### 记忆 tab 从「记录列表」变成「一张画像」

@@ -59,6 +59,7 @@
     "access": "public"
   },
   "scripts": {
+    "prepublishOnly": "npm run check && npm test && node scripts/prepublish-gate.mjs",
     "check": "node --check index.js && node --check client.js",
     "test": "node --test test/*.test.mjs",
     "deploy": "rsync -av client.js index.js package.json cordis.patch.yml README.md LICENSE types ~/.dsh/profiles/web/node_modules/@dsh-plugins/dsh-user-mirror/"

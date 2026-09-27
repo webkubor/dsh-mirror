@@ -2,6 +2,14 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.8.3] - 2026-09-27
+
+### 📛 包装升级：徽章换成立体大款式 + 接入 README 门禁
+
+- 8 个徽章从 `flat-square` 换成 `for-the-badge`（规则要求立体大徽章，此前一直没执行）
+- 新增 `scripts/readme-gate.mjs`：README 首屏四条契约，
+  挂在 `prepublishOnly` 上，以后再改 README 不合规会直接拦住发布
+
 ## [0.8.2] - 2026-09-27
 
 ### 🔧 引导词区的三种"看不见"状态修好了（浏览器实测发现）

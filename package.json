@@ -1,6 +1,6 @@
 {
   "name": "@dsh-plugins/dsh-user-mirror",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Let the AI know you. 让模型主动记下你的判断依据（原则/红线/工作方式），跨会话复用 —— 有容量、会遗忘、每条都说得出为什么记。",
   "type": "module",
   "main": "index.js",
@@ -60,7 +60,7 @@
     "access": "public"
   },
   "scripts": {
-    "prepublishOnly": "npm run check && npm test && node scripts/prepublish-gate.mjs",
+    "prepublishOnly": "npm run check && npm test && node scripts/prepublish-gate.mjs && node scripts/readme-gate.mjs",
     "check": "node --check index.js && node --check client.js && node --check guidance.js",
     "test": "node --test test/*.test.mjs",
     "deploy": "rsync -av client.js index.js guidance.js package.json cordis.patch.yml README.md LICENSE types ~/.dsh/profiles/web/node_modules/@dsh-plugins/dsh-user-mirror/"

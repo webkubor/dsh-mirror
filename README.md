@@ -7,17 +7,17 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@dsh-plugins/dsh-user-mirror"><img src="https://img.shields.io/npm/v/%40dsh-plugins%2Fdsh-user-mirror?style=flat-square&color=8b5cf6&logo=npm&label=npm" alt="npm" /></a>
-  <a href="https://www.npmjs.com/package/@dsh-plugins/dsh-user-mirror"><img src="https://img.shields.io/npm/dm/%40dsh-plugins%2Fdsh-user-mirror?style=flat-square&color=6d7f9c&label=downloads" alt="downloads" /></a>
-  <img src="https://img.shields.io/badge/DSH-%E2%89%A50.1.1--rc.2-4d6bfe?style=flat-square" alt="DSH" />
-  <img src="https://img.shields.io/badge/runtime_deps-1-5A9E6F?style=flat-square" alt="deps" />
-  <img src="https://img.shields.io/badge/license-MIT-777?style=flat-square" alt="MIT" />
+  <a href="https://www.npmjs.com/package/@dsh-plugins/dsh-user-mirror"><img src="https://img.shields.io/npm/v/%40dsh-plugins%2Fdsh-user-mirror?style=for-the-badge&color=8b5cf6&logo=npm&label=npm" alt="npm" /></a>
+  <a href="https://www.npmjs.com/package/@dsh-plugins/dsh-user-mirror"><img src="https://img.shields.io/npm/dm/%40dsh-plugins%2Fdsh-user-mirror?style=for-the-badge&color=6d7f9c&label=downloads" alt="downloads" /></a>
+  <img src="https://img.shields.io/badge/DSH-%E2%89%A50.1.1--rc.2-4d6bfe?style=for-the-badge" alt="DSH" />
+  <img src="https://img.shields.io/badge/runtime_deps-1-5A9E6F?style=for-the-badge" alt="deps" />
+  <img src="https://img.shields.io/badge/license-MIT-777?style=for-the-badge" alt="MIT" />
 </p>
 
 <p align="center">
-  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=flat-square" alt="DSH Plugin" /></a>
-  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=flat-square" alt="dsh-plugin" /></a>
-  <a href="https://github.com/topics/ai-memory"><img src="https://img.shields.io/badge/topic-ai--memory-8b5cf6?style=flat-square" alt="ai-memory" /></a>
+  <a href="https://github.com/deepseek-ai/deepseek-harness"><img src="https://img.shields.io/badge/DeepSeek_Harness-Plugin-4d6bfe?style=for-the-badge" alt="DSH Plugin" /></a>
+  <a href="https://github.com/topics/dsh-plugin"><img src="https://img.shields.io/badge/topic-dsh--plugin-4d6bfe?style=for-the-badge" alt="dsh-plugin" /></a>
+  <a href="https://github.com/topics/ai-memory"><img src="https://img.shields.io/badge/topic-ai--memory-8b5cf6?style=for-the-badge" alt="ai-memory" /></a>
   &nbsp;·&nbsp; <a href="CHANGELOG.md">更新日志</a> · <a href="DEV_NOTES.md">开发笔记</a>
 </p>
 

@@ -211,14 +211,13 @@ window.__ModuleLoader__.load({
         display: flex; flex-direction: column; gap: 6px;
       }
       .dmr-guidance-item {
-        border-left: 2px solid var(--dsw-alias-border-l2, rgba(0,0,0,.1));
+        border-left: 3px solid var(--dsw-alias-border-l2, rgba(0,0,0,.1));
         padding: 8px 12px; border-radius: 4px;
-        background: var(--dsw-alias-fill-l1, rgba(255,255,255,.02));
+        background: var(--dsw-alias-bg-layer-1, rgba(255,255,255,.02));
       }
-      .dmr-guidance-item.is-strong { border-left-color: var(--dsw-alias-label-secondary, #888); }
-      .dmr-guidance-item.is-blocked {
-        opacity: .45;
-        border-left-color: var(--dsw-alias-feedback-error, #d44);
+      /* 高优先级（红线级）：边线用主文字色，视觉上明显更实 */
+      .dmr-guidance-item.is-strong {
+        border-left-color: var(--dsw-alias-label-primary, #222);
       }
       .dmr-guidance-row1 {
         display: flex; gap: 10px; align-items: center; font-size: 11.5px;
@@ -227,41 +226,87 @@ window.__ModuleLoader__.load({
       }
       .dmr-guidance-prio {
         font-weight: 600; padding: 1px 6px; border-radius: 3px;
-        background: var(--dsw-alias-fill-l2, rgba(0,0,0,.05));
+        background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.05));
+        color: var(--dsw-alias-label-secondary, #888);
       }
-      .dmr-guidance-item.is-strong .dmr-guidance-prio { color: var(--dsw-alias-label-primary, #222); }
-      .dmr-guidance-status.is-injected { color: var(--dsw-alias-feedback-success, #3a7); }
-      .dmr-guidance-status.is-blocked { color: var(--dsw-alias-feedback-error, #d44); }
+      .dmr-guidance-item.is-strong .dmr-guidance-prio {
+        color: var(--dsw-alias-label-primary, #222);
+      }
+      .dmr-guidance-status { color: var(--dsw-alias-state-success-primary, #3a7); }
       .dmr-guidance-file {
-        font-family: ui-monospace, monospace; font-size: 11px; opacity: .8;
+        font-family: ui-monospace, monospace; font-size: 11px; opacity: .75;
       }
       .dmr-guidance-desc {
         font-size: 13px; line-height: 1.6; margin-top: 5px;
         color: var(--dsw-alias-label-primary, #222);
       }
-      .dmr-guidance-item.is-blocked .dmr-guidance-desc {
-        text-decoration: line-through;
-        color: var(--dsw-alias-label-tertiary, #aaa);
-      }
       .dmr-guidance-tags { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
       .dmr-guidance-tags span {
         font-size: 11px; color: var(--dsw-alias-label-tertiary, #888);
         padding: 1px 5px; border-radius: 3px;
-        background: var(--dsw-alias-fill-l2, rgba(0,0,0,.04));
+        background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.04));
       }
+      /* 被预算挤掉的条目：收进折叠区，不占主视觉 */
       .dmr-guidance-dropped {
-        margin: 8px 0; padding: 8px 12px;
-        background: var(--dsw-alias-feedback-error-bg, rgba(220,80,80,.08));
-        border-left: 2px solid var(--dsw-alias-feedback-error, #d44);
-        color: var(--dsw-alias-feedback-error, #d44);
-        font-size: 12.5px; line-height: 1.55; border-radius: 4px;
+        margin: 8px 0 0; padding: 7px 12px;
+        background: var(--dsw-alias-bg-layer-2, rgba(220,80,80,.06));
+        border-left: 3px solid var(--dsw-alias-state-error-primary, #d44);
+        font-size: 12px; line-height: 1.5; border-radius: 4px;
+        color: var(--dsw-alias-label-secondary, #888);
+      }
+      .dmr-guidance-dropped b { color: var(--dsw-alias-state-error-primary, #d44); }
+      .dmr-guidance-dropped details { margin-top: 4px; }
+      .dmr-guidance-dropped summary {
+        cursor: pointer; color: var(--dsw-alias-label-tertiary, #888); font-size: 11.5px;
+      }
+      .dmr-guidance-dropped ul { margin: 4px 0 0; padding-left: 16px; }
+      .dmr-guidance-dropped li {
+        font-family: ui-monospace, monospace; font-size: 11px;
+        color: var(--dsw-alias-label-tertiary, #888);
       }
       .dmr-guidance-foot {
         margin-top: 8px; font-size: 11px; line-height: 1.6;
         color: var(--dsw-alias-label-tertiary, #888);
       }
 
-            /* ── 状态与说明 ── */
+            /* 空态 / 错误态说明 */
+      .dmr-guidance-note {
+        margin-top: 8px; padding: 10px 12px; border-radius: 4px;
+        background: var(--dsw-alias-bg-layer-1, rgba(0,0,0,.02));
+        border-left: 3px solid var(--dsw-alias-border-l2, rgba(0,0,0,.1));
+        font-size: 12.5px; line-height: 1.65;
+        color: var(--dsw-alias-label-secondary, #888);
+      }
+      .dmr-guidance-note.is-bad {
+        border-left-color: var(--dsw-alias-state-error-primary, #d44);
+        color: var(--dsw-alias-label-secondary, #888);
+      }
+      .dmr-guidance-note code {
+        font-family: ui-monospace, monospace; font-size: 11.5px;
+        background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.05));
+        padding: 1px 5px; border-radius: 3px;
+      }
+      /* 扫描诊断 */
+      .dmr-guidance-diag {
+        margin: 8px 0 0; padding: 7px 12px;
+        background: var(--dsw-alias-bg-layer-2, rgba(0,0,0,.04));
+        border-left: 3px solid var(--dsw-alias-state-warn-primary, #c90);
+        font-size: 12px; line-height: 1.5; border-radius: 4px;
+        color: var(--dsw-alias-label-secondary, #888);
+      }
+      .dmr-guidance-diag b { color: var(--dsw-alias-state-warn-primary, #c90); }
+      .dmr-guidance-diag details { margin-top: 4px; }
+      .dmr-guidance-diag summary {
+        cursor: pointer; color: var(--dsw-alias-label-tertiary, #888); font-size: 11.5px;
+      }
+      .dmr-guidance-diag ul { margin: 4px 0 0; padding-left: 16px; }
+      .dmr-guidance-diag li { font-size: 11.5px; line-height: 1.6; margin-bottom: 2px; }
+      .dmr-guidance-diag .lv {
+        font-size: 10.5px; padding: 0 4px; border-radius: 2px;
+        background: var(--dsw-alias-bg-layer-3, rgba(0,0,0,.06));
+      }
+
+      /* ── 状态与说明 ── */
       .dsh-mirror-empty { color: var(--dsw-alias-label-tertiary, #aaa); text-align: center; padding: 44px 16px; line-height: 1.85; }
       .dsh-mirror-refresh {
         border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.1));
@@ -685,48 +730,102 @@ window.__ModuleLoader__.load({
 
       // ── 手写引导词：你立的规矩，AI 每次会话都要遵守的 ──────────
       const guidanceList = (g) => {
-        if (!g || !g.entries || g.entries.length === 0) return null
-        const injectedFiles = new Set(
-          (g.entries.filter((e) => e.injected)).map((e) => e.file),
+        // 端点拿不到（host 挂了 / 路由 404）—— 必须说出来，不能静默消失。
+        // 静默消失的后果：用户以为这个功能不存在，而不是"它坏了"。
+        if (!g) {
+          return React.createElement('div', { className: 'dmr-sec-block' },
+            React.createElement('div', { className: 'dmr-sec' },
+              React.createElement('h4', null, tr('手写引导词', 'Your hand-written guidance')),
+            ),
+            React.createElement('div', { className: 'dmr-guidance-note is-bad' },
+              tr('读不到引导词状态（/dsh-mirror/guidance 无响应）。引导词照常注入系统提示，只是这里看不到。',
+                 'Cannot read guidance state (/dsh-mirror/guidance unreachable). Guidance is still injected; only this view is missing.')),
+          )
+        }
+
+        const entries = g.entries || []
+        const diagnostics = g.diagnostics || []
+
+        // 一条都没有 —— 说清楚这个功能是什么、怎么开始用。
+        // 空着不显示等于把功能藏起来：用户根本没机会知道它能做什么。
+        if (entries.length === 0) {
+          return React.createElement('div', { className: 'dmr-sec-block' },
+            React.createElement('div', { className: 'dmr-sec' },
+              React.createElement('h4', null, tr('手写引导词', 'Your hand-written guidance')),
+            ),
+            React.createElement('div', { className: 'dmr-guidance-note' },
+              React.createElement('div', null,
+                tr('还没有引导词。引导词是你手写的规矩 —— 走什么流程、什么绝不做，',
+                   'No guidance yet. Guidance is the rules you write by hand — which workflow to follow, what never to do,')),
+              React.createElement('div', { style: { marginTop: '4px' } },
+                tr('每个会话都会自动带上（不分模式）。在 ',
+                   'applied to every session regardless of mode. Drop a markdown file in '),
+                React.createElement('code', null, '~/.dsh/memory/guidance/'),
+                tr(' 放一个 md 文件即可，需要 description 头。',
+                   ' with a description header to start.')),
+              React.createElement('div', { className: 'dmr-guidance-foot' },
+                '格式：--- / description: 一句话 / priority: 90 / ---'),
+            ),
+          )
+        }
+
+        // 主列表只放真正进了 system prompt 的条目 —— 没进去的列在这儿
+        // 只是噪音（它们没生效，却把生效的挤下去）。未注入的收进折叠区。
+        const live = entries.filter((e) => e.injected)
+        const dead = entries.filter((e) => !e.injected)
+
+        const cardOf = (e) => React.createElement('li', {
+          key: e.file,
+          className: 'dmr-guidance-item' + (e.priority >= 90 ? ' is-strong' : ''),
+        },
+          React.createElement('div', { className: 'dmr-guidance-row1' },
+            React.createElement('span', { className: 'dmr-guidance-prio' }, 'p' + e.priority),
+            React.createElement('span', { className: 'dmr-guidance-status' }, '✓ 已注入'),
+            React.createElement('span', { className: 'dmr-guidance-file' }, e.file),
+          ),
+          React.createElement('div', { className: 'dmr-guidance-desc' }, e.description),
+          e.tags && e.tags.length
+            ? React.createElement('div', { className: 'dmr-guidance-tags' },
+                e.tags.map((t) => React.createElement('span', { key: t }, '#' + t)))
+            : null,
         )
-        const dropped = g.dropped || []
+
         return React.createElement('div', { className: 'dmr-sec-block' },
           React.createElement('div', { className: 'dmr-sec' },
             React.createElement('h4', null, tr('手写引导词', 'Your hand-written guidance')),
-            React.createElement('span', { className: 'n' }, String(g.entries.length)),
+            React.createElement('span', { className: 'n' }, String(live.length)),
             React.createElement('span', { className: 'hint' },
-              tr('本会话已注入 ' + injectedFiles.size + '/' + g.entries.length,
-                 'Injected ' + injectedFiles.size + '/' + g.entries.length + ' this session')),
+              tr('本会话已注入 ' + live.length + ' 条',
+                 live.length + ' injected this session')),
           ),
-          // 被预算挤掉的提示 —— 必须在显眼处，否则红线被吃了你不知道
-          dropped.length ? React.createElement('div', { className: 'dmr-guidance-dropped' },
-            '⚠ 本次预算不足，以下引导词没注入：' + dropped.join('、')
-              + '。要它们生效就精简已有引导词或调大 maxGuidanceChars。'
+          React.createElement('ul', { className: 'dmr-guidance-list' }, live.map(cardOf)),
+          // 被挤掉的：一句话说清，细节折进去 —— 不占主视觉但绝不静默丢
+          dead.length ? React.createElement('div', { className: 'dmr-guidance-dropped' },
+            React.createElement('b', null, '⚠ ' + dead.length + ' 条引导词未注入'),
+            ' —— 预算不足（' + g.usedChars + '/' + g.maxChars + ' 字符）。',
+            '要它们生效就精简已有引导词，或调大 maxGuidanceChars。',
+            React.createElement('details', null,
+              React.createElement('summary', null, tr('看看是哪几条', 'See which ones')),
+              React.createElement('ul', null,
+                dead.map((e) => React.createElement('li', { key: e.file }, e.file))),
+            ),
           ) : null,
-          React.createElement('ul', { className: 'dmr-guidance-list' },
-            g.entries.map((e) => {
-              const injected = injectedFiles.has(e.file)
-              const cls = 'dmr-guidance-item' +
-                (injected ? ' is-injected' : ' is-blocked') +
-                (e.priority >= 90 ? ' is-strong' : '')
-              return React.createElement('li', { key: e.file, className: cls },
-                React.createElement('div', { className: 'dmr-guidance-row1' },
-                  React.createElement('span', { className: 'dmr-guidance-prio' }, 'p' + e.priority),
-                  React.createElement('span', { className: 'dmr-guidance-status' },
-                    injected ? '✓ 已注入' : '✗ 未注入'),
-                  React.createElement('span', { className: 'dmr-guidance-file' }, e.file),
-                ),
-                React.createElement('div', { className: 'dmr-guidance-desc' }, e.description),
-                e.tags && e.tags.length
-                  ? React.createElement('div', { className: 'dmr-guidance-tags' },
-                      e.tags.map((t) => React.createElement('span', { key: t }, '#' + t)))
-                  : null,
-              )
-            }),
-          ),
+          // 扫描诊断 —— host 端已经收集好了（缺 description、超 32KB、读失败），
+          // 之前 UI 一个字段都没用。用户写错格式时形同哑巴，必须说出来。
+          diagnostics.length ? React.createElement('div', { className: 'dmr-guidance-diag' },
+            React.createElement('b', null, '⚠ ' + diagnostics.length + ' 个文件没被加载'),
+            React.createElement('details', null,
+              React.createElement('summary', null, tr('看看是哪些、为什么', 'See which and why')),
+              React.createElement('ul', null,
+                diagnostics.map((x, i) => React.createElement('li', { key: i },
+                  React.createElement('span', { className: 'lv' }, x.level === 'warn' ? '警告' : '信息'),
+                  ' ',
+                  x.message,
+                ))),
+            ),
+          ) : null,
           React.createElement('div', { className: 'dmr-guidance-foot' },
             '真源在 ~/.dsh/memory/guidance/ —— 只进 description 一行，全文用 memory_read 取。',
-            dropped.length ? ' 预算: ' + g.usedChars + '/' + g.maxChars + ' 字符。' : null,
           ),
         )
       }

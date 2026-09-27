@@ -22,6 +22,12 @@ import z from '@deepseek-ai/schemastery'
 import { z as zod } from 'zod'
 import { defineDomain, domainTable } from '@deepseek-ai/dsh-storage-domain'
 import { defineTool } from '@deepseek-ai/dsh-tools'
+import {
+  DEFAULT_MEMORY_ROOT,
+  scanGuidance,
+  renderGuidance,
+  readGuidanceFile,
+} from './guidance.js'
 
 /** 稳定插件名。 */
 export const name = 'dsh-mirror'
@@ -61,6 +67,13 @@ export const Config = z.object({
   maxTokens: z.number().default(500),
   /** system-prompt section 的排序位置（越小越靠前）。 */
   sectionOrder: z.number().default(160),
+  /**
+   * 手写引导词根目录。目录约定见 guidance.js：
+   * guidance/ 注入、reference/ 按需读、archive/ 不读。
+   */
+  memoryRoot: z.string().default(DEFAULT_MEMORY_ROOT),
+  /** 引导词注入的字符预算（近似 2 字符 ≈ 1 token）。超了按 priority 截断并明确标注。 */
+  maxGuidanceChars: z.number().default(1600),
 })
 
 /**
@@ -273,6 +286,34 @@ export function apply(ctx, config) {
   let lastLearned = { at: 0, count: 0 }
 
   /*
+   * 引导词缓存 —— section 的 text() 每次组装都会求值，不能每次都读盘。
+   * 用一个可变对象持有最近一次扫描结果，后台定期（以及工具调用后）刷新。
+   *
+   * 刻意不做文件监听：引导词改一次要人动手，轮询 30s 足够，也少一个 inotify 依赖。
+   */
+  const guidanceCache = { entries: [], diagnostics: [], scannedAt: 0 }
+
+  async function refreshGuidance() {
+    try {
+      const { entries, diagnostics } = await scanGuidance(config.memoryRoot)
+      guidanceCache.entries = entries
+      guidanceCache.diagnostics = diagnostics
+      guidanceCache.scannedAt = Date.now()
+    } catch (err) {
+      // fail-open：引导词读不到不该拖垮整个 system prompt 组装
+      ctx.logger?.warn('dsh-mirror: 引导词扫描失败: ' + String(err))
+    }
+  }
+
+  // 首次扫描 + 每 30s 刷新（用 effect 管生命周期，随插件卸载停止）
+  ctx.effect(() => {
+    void refreshGuidance()
+    const timer = setInterval(() => void refreshGuidance(), 30_000)
+    if (typeof timer.unref === 'function') timer.unref()
+    return () => clearInterval(timer)
+  }, 'dsh-mirror: guidance refresh')
+
+  /*
    * 存储域的生命周期必须整段包在 effect 里 —— 三个坑一起躲：
    *
    * 1. open 放在 apply 顶层的话，effect 重跑（插件重载）拿到的还是同一个
@@ -390,6 +431,25 @@ export function apply(ctx, config) {
 	  },
 	})
 
+	/*
+	 * system-prompt section：手写引导词。
+	 *
+	 * 与上面「偏好记忆」的分工：偏好是模型自己记的，会衰减淘汰；引导词是人写的，
+	 * 纪律是少而稳。order 排在偏好**之前** —— 人写的约束优先级高于模型的推断。
+	 *
+	 * 只注入 description 一行，全文走 memory_read 按需取。这是目录能不烂掉的关键：
+	 * 20 条引导词也只占 20 行，而不是 20 篇文档。
+	 */
+	ctx.systemPrompt.section({
+	  name: 'mirror:guidance',
+	  order: config.sectionOrder - 10,
+	  text: () => {
+	    const { entries } = guidanceCache
+	    if (!entries || entries.length === 0) return ''
+	    return renderGuidance(entries, config.maxGuidanceChars).text
+	  },
+	})
+
 
   // HTTP 端点：给 client 端（记忆 tab）查偏好列表
   ctx.effect(
@@ -427,6 +487,48 @@ export function apply(ctx, config) {
         },
       }),
     'dsh-mirror: /preferences route',
+  )
+
+  /*
+   * HTTP 端点：给 client 端看「手写引导词加载了什么」。
+   *
+   * 这是本次改造的重点之一 —— 用户此前根本看不到 ~/.dsh/memory 有没有被读。
+   * 现在把扫描结果、每条是否进了预算、被截断的是谁，全摊开。
+   */
+  ctx.effect(
+    () =>
+      ctx.webServer.register({
+        kind: 'exact',
+        path: '/dsh-mirror/guidance',
+        handler: async (req, res) => {
+          try {
+            const rendered = renderGuidance(guidanceCache.entries, config.maxGuidanceChars)
+            const included = new Set(rendered.included.map((e) => e.file))
+            const body = JSON.stringify({
+              memoryRoot: config.memoryRoot,
+              scannedAt: guidanceCache.scannedAt,
+              maxChars: config.maxGuidanceChars,
+              usedChars: rendered.usedChars,
+              entries: guidanceCache.entries.map((e) => ({
+                file: e.file,
+                description: e.description,
+                priority: e.priority,
+                tags: e.tags,
+                lines: e.lines,
+                injected: included.has(e.file),
+              })),
+              dropped: rendered.dropped.map((e) => e.file),
+              diagnostics: guidanceCache.diagnostics,
+            })
+            res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
+            res.end(body)
+          } catch (err) {
+            res.writeHead(500, { 'content-type': 'application/json' })
+            res.end(JSON.stringify({ error: String(err) }))
+          }
+        },
+      }),
+    'dsh-mirror: /guidance route',
   )
 
   // vendor 路由：把 ai-orb 的 ESM 源码按同源静态资源下发给 client 端
@@ -515,6 +617,54 @@ export function apply(ctx, config) {
         lastLearned = { at: Date.now(), count: 1 }
         ctx.logger?.info(`dsh-mirror: ${outcome} [${args.kind}] ${text}`)
         return { outcome, total: table.size }
+      },
+    }),
+  )
+
+  /*
+   * 工具：读一条引导词的全文。
+   *
+   * system prompt 里只放了 description 一行 —— 那是索引。真要按某条做事时，
+   * 用这个工具取全文。这样"有 30 条引导词"也不会把每轮请求撑爆。
+   *
+   * 只读 memoryRoot 下的文件，防目录穿越（guidance.js 里做了校验收口）。
+   */
+  ctx.tools.register(
+    defineTool({
+      name: 'memory_read',
+      description:
+        '读一条手写引导词的全文。system prompt 里的引导词列表只是摘要（一行一条），' +
+        '真要按某条做事时用它取全文再执行。\n' +
+        'name 传 system prompt 里显示的相对路径，如 "guidance/cs-flow.md"；' +
+        '也可以读 "reference/xxx.md" 这类参考资料。',
+      parameters: {
+        name: {
+          type: 'string',
+          required: true,
+          description: '相对 ~/.dsh/memory/ 的路径，如 guidance/cs-flow.md',
+        },
+      },
+      output: {
+        schema: {
+          type: 'object',
+          additionalProperties: false,
+          properties: {
+            name: { type: 'string', required: true },
+            text: { type: 'string', required: true },
+          },
+        },
+        render: (args, value) => [{ type: 'text', text: value.text }],
+      },
+      async execute(args) {
+        const found = await readGuidanceFile(config.memoryRoot, args.name)
+        if (!found) {
+          const available = guidanceCache.entries.map((e) => 'guidance/' + e.file).join('、')
+          throw new Error(
+            'memory_read: 找不到 "' + args.name + '"。' +
+              (available ? '可用的引导词：' + available : 'guidance/ 下暂无引导词。'),
+          )
+        }
+        return { name: found.name, text: found.text }
       },
     }),
   )

@@ -35,7 +35,7 @@ jobs:
           node -e "
             const fs = require('node:fs')
             const pkg = require('./package.json')
-            const must = ['index.js', 'client.js', 'cordis.patch.yml']
+            const must = ['index.js', 'client.js', 'guidance.js', 'cordis.patch.yml']
             for (const f of must) {
               if (!pkg.files.includes(f)) throw new Error('package.json files 缺 ' + f)
               if (!fs.existsSync(f)) throw new Error('文件不存在: ' + f)
@@ -51,7 +51,7 @@ jobs:
           set -e
           npm pack --silent >/dev/null
           tar -tzf *.tgz | sed 's|^package/||' | sort > /tmp/packed.txt
-          for f in index.js client.js cordis.patch.yml package.json; do
+          for f in index.js client.js guidance.js cordis.patch.yml package.json; do
             grep -qx "$f" /tmp/packed.txt || { echo "❌ tarball 缺 $f"; exit 1; }
           done
           echo "✓ tarball 内容完整"

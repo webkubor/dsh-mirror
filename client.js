@@ -204,7 +204,64 @@ window.__ModuleLoader__.load({
         animation: dmr-rise .32s ease both;
       }
 
-      /* ── 状态与说明 ── */
+      /* ── 手写引导词 ── */
+      .dmr-sec-block { margin: 0 0 12px; }
+      .dmr-guidance-list {
+        list-style: none; padding: 0; margin: 8px 0 0;
+        display: flex; flex-direction: column; gap: 6px;
+      }
+      .dmr-guidance-item {
+        border-left: 2px solid var(--dsw-alias-border-l2, rgba(0,0,0,.1));
+        padding: 8px 12px; border-radius: 4px;
+        background: var(--dsw-alias-fill-l1, rgba(255,255,255,.02));
+      }
+      .dmr-guidance-item.is-strong { border-left-color: var(--dsw-alias-label-secondary, #888); }
+      .dmr-guidance-item.is-blocked {
+        opacity: .45;
+        border-left-color: var(--dsw-alias-feedback-error, #d44);
+      }
+      .dmr-guidance-row1 {
+        display: flex; gap: 10px; align-items: center; font-size: 11.5px;
+        color: var(--dsw-alias-label-tertiary, #888);
+        font-variant-numeric: tabular-nums;
+      }
+      .dmr-guidance-prio {
+        font-weight: 600; padding: 1px 6px; border-radius: 3px;
+        background: var(--dsw-alias-fill-l2, rgba(0,0,0,.05));
+      }
+      .dmr-guidance-item.is-strong .dmr-guidance-prio { color: var(--dsw-alias-label-primary, #222); }
+      .dmr-guidance-status.is-injected { color: var(--dsw-alias-feedback-success, #3a7); }
+      .dmr-guidance-status.is-blocked { color: var(--dsw-alias-feedback-error, #d44); }
+      .dmr-guidance-file {
+        font-family: ui-monospace, monospace; font-size: 11px; opacity: .8;
+      }
+      .dmr-guidance-desc {
+        font-size: 13px; line-height: 1.6; margin-top: 5px;
+        color: var(--dsw-alias-label-primary, #222);
+      }
+      .dmr-guidance-item.is-blocked .dmr-guidance-desc {
+        text-decoration: line-through;
+        color: var(--dsw-alias-label-tertiary, #aaa);
+      }
+      .dmr-guidance-tags { display: flex; gap: 6px; margin-top: 5px; flex-wrap: wrap; }
+      .dmr-guidance-tags span {
+        font-size: 11px; color: var(--dsw-alias-label-tertiary, #888);
+        padding: 1px 5px; border-radius: 3px;
+        background: var(--dsw-alias-fill-l2, rgba(0,0,0,.04));
+      }
+      .dmr-guidance-dropped {
+        margin: 8px 0; padding: 8px 12px;
+        background: var(--dsw-alias-feedback-error-bg, rgba(220,80,80,.08));
+        border-left: 2px solid var(--dsw-alias-feedback-error, #d44);
+        color: var(--dsw-alias-feedback-error, #d44);
+        font-size: 12.5px; line-height: 1.55; border-radius: 4px;
+      }
+      .dmr-guidance-foot {
+        margin-top: 8px; font-size: 11px; line-height: 1.6;
+        color: var(--dsw-alias-label-tertiary, #888);
+      }
+
+            /* ── 状态与说明 ── */
       .dsh-mirror-empty { color: var(--dsw-alias-label-tertiary, #aaa); text-align: center; padding: 44px 16px; line-height: 1.85; }
       .dsh-mirror-refresh {
         border: 1px solid var(--dsw-alias-border-l2, rgba(0,0,0,.1));
@@ -397,6 +454,7 @@ window.__ModuleLoader__.load({
         kinds: null,
         error: null,
         lastLearned: null,
+        guidance: null,
       })
       // 球是装饰件：拿不到就退回 🪞，不能让它挡住记忆列表
       const [orbReady, setOrbReady] = React.useState(false)
@@ -409,28 +467,30 @@ window.__ModuleLoader__.load({
 
       const load = React.useCallback((manual) => {
         setState((s) => ({ ...s, loading: !manual, refreshing: !!manual }))
-        fetch('/dsh-mirror/preferences')
-          .then((r) => r.json())
-          .then((d) =>
-            setState({
-              loading: false,
-              refreshing: false,
-              memories: d.memories || [],
-              kinds: d.kinds || null,
-              error: null,
-              lastLearned: d.lastLearned || null,
-            }),
-          )
-          .catch((e) =>
-            setState({
-              loading: false,
-              refreshing: false,
-              memories: [],
-              kinds: null,
-              error: String(e),
-              lastLearned: null,
-            }),
-          )
+        Promise.all([
+          fetch('/dsh-mirror/preferences').then((r) => r.json()),
+          fetch('/dsh-mirror/guidance').then((r) => r.json()).catch(() => null),
+        ]).then(([pref, guide]) =>
+          setState({
+            loading: false,
+            refreshing: false,
+            memories: pref.memories || [],
+            kinds: pref.kinds || null,
+            error: null,
+            lastLearned: pref.lastLearned || null,
+            guidance: guide,
+          }),
+        ).catch((e) =>
+          setState({
+            loading: false,
+            refreshing: false,
+            memories: [],
+            kinds: null,
+            error: String(e),
+            lastLearned: null,
+            guidance: null,
+          }),
+        )
       }, [])
 
       React.useEffect(() => {
@@ -623,6 +683,54 @@ window.__ModuleLoader__.load({
         )
       }
 
+      // ── 手写引导词：你立的规矩，AI 每次会话都要遵守的 ──────────
+      const guidanceList = (g) => {
+        if (!g || !g.entries || g.entries.length === 0) return null
+        const injectedFiles = new Set(
+          (g.entries.filter((e) => e.injected)).map((e) => e.file),
+        )
+        const dropped = g.dropped || []
+        return React.createElement('div', { className: 'dmr-sec-block' },
+          React.createElement('div', { className: 'dmr-sec' },
+            React.createElement('h4', null, tr('手写引导词', 'Your hand-written guidance')),
+            React.createElement('span', { className: 'n' }, String(g.entries.length)),
+            React.createElement('span', { className: 'hint' },
+              tr('本会话已注入 ' + injectedFiles.size + '/' + g.entries.length,
+                 'Injected ' + injectedFiles.size + '/' + g.entries.length + ' this session')),
+          ),
+          // 被预算挤掉的提示 —— 必须在显眼处，否则红线被吃了你不知道
+          dropped.length ? React.createElement('div', { className: 'dmr-guidance-dropped' },
+            '⚠ 本次预算不足，以下引导词没注入：' + dropped.join('、')
+              + '。要它们生效就精简已有引导词或调大 maxGuidanceChars。'
+          ) : null,
+          React.createElement('ul', { className: 'dmr-guidance-list' },
+            g.entries.map((e) => {
+              const injected = injectedFiles.has(e.file)
+              const cls = 'dmr-guidance-item' +
+                (injected ? ' is-injected' : ' is-blocked') +
+                (e.priority >= 90 ? ' is-strong' : '')
+              return React.createElement('li', { key: e.file, className: cls },
+                React.createElement('div', { className: 'dmr-guidance-row1' },
+                  React.createElement('span', { className: 'dmr-guidance-prio' }, 'p' + e.priority),
+                  React.createElement('span', { className: 'dmr-guidance-status' },
+                    injected ? '✓ 已注入' : '✗ 未注入'),
+                  React.createElement('span', { className: 'dmr-guidance-file' }, e.file),
+                ),
+                React.createElement('div', { className: 'dmr-guidance-desc' }, e.description),
+                e.tags && e.tags.length
+                  ? React.createElement('div', { className: 'dmr-guidance-tags' },
+                      e.tags.map((t) => React.createElement('span', { key: t }, '#' + t)))
+                  : null,
+              )
+            }),
+          ),
+          React.createElement('div', { className: 'dmr-guidance-foot' },
+            '真源在 ~/.dsh/memory/guidance/ —— 只进 description 一行，全文用 memory_read 取。',
+            dropped.length ? ' 预算: ' + g.usedChars + '/' + g.maxChars + ' 字符。' : null,
+          ),
+        )
+      }
+
       // 工作方式 / 审美 —— 轻量清单，两栏
       const plainList = (k) => {
         const list = d.byKind[k]
@@ -640,18 +748,31 @@ window.__ModuleLoader__.load({
       }
 
       let content
+      // 引导词永远展示 —— 手写优先于偏好记忆，没有偏好也得看得到
+      const guidanceBlock = guidanceList(state.guidance)
       if (state.loading) {
-        content = React.createElement('div', { className: 'dsh-mirror-empty' }, tr('加载中…', 'Loading…'))
+        content = React.createElement('div', null,
+          guidanceBlock,
+          React.createElement('div', { className: 'dsh-mirror-empty' }, tr('加载中…', 'Loading…')),
+        )
       } else if (state.error) {
-        content = React.createElement('div', { className: 'dsh-mirror-empty' }, tr('加载失败：', 'Load failed: ') + state.error)
+        content = React.createElement('div', null,
+          guidanceBlock,
+          React.createElement('div', { className: 'dsh-mirror-empty' }, tr('加载失败：', 'Load failed: ') + state.error),
+        )
       } else if (state.memories.length === 0) {
-        content = React.createElement('div', { className: 'dsh-mirror-empty' },
-          tr('还没有任何记忆。等你下次表达出某条原则或取舍时，模型会当场用 mirror_remember 记下来 —— 你会在对话里看到它记了什么。', 'No memories yet. When you express a reusable principle or trade-off, the model will record it with mirror_remember — you will see what it remembers in the conversation.'))
+        content = React.createElement('div', null,
+          guidanceBlock,
+          React.createElement('div', { className: 'dsh-mirror-empty' },
+            tr('还没有任何记忆。等你下次表达出某条原则或取舍时，模型会当场用 mirror_remember 记下来 —— 你会在对话里看到它记了什么。', 'No memories yet. When you express a reusable principle or trade-off, the model will record it with mirror_remember — you will see what it remembers in the conversation.')),
+        )
       } else {
         const cols = (d.byKind.workflow.length || d.byKind.taste.length)
           ? React.createElement('div', { className: 'dmr-cols' }, plainList('workflow'), plainList('taste'))
           : null
         content = React.createElement('div', null,
+          guidanceBlock,
+          React.createElement('hr', { className: 'dmr-rule' }),
           section('redline', tr('越界有代价，永不衰减', 'Crossing the line has a cost; never fades')) ? React.createElement('div', null,
             React.createElement('hr', { className: 'dmr-rule' }),
             section('redline', tr('越界有代价，永不衰减', 'Crossing the line has a cost; never fades'))) : null,

@@ -123,8 +123,10 @@ v0.4 之前是用正则扫模型的 reasoning 流，找「用户偏好…」这�
 
 ## 安装
 
+> 前提：装好 Node.js 即可，**无需全局安装 dsh** —— 官方入口就是 `npx @deepseek-ai/dsh`。已全局安装的可把它换成 `dsh`。
+
 ```bash
-dsh plugin --profile web add @dsh-plugins/dsh-user-mirror
+npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-user-mirror
 ```
 
 ⚠️ **只能装在提供 `storageDomain` 和 `webServer` 的 profile 上**（也就是 web）。
@@ -190,10 +192,10 @@ storageDomain, webServer)` 并让整个 boot 失败 —— 前者是记忆持久
 
 | 插件 | 领域 | 核心功能 | 快速安装 |
 | :--- | :--- | :--- | :--- |
-| [🎨 **dsh-bloom-theme**](https://github.com/webkubor/dsh-bloom-theme) | 主题美化 | 现代毛玻璃美学、暗黑/亮色自适应与 20+ 精选艺术壁纸 | `dsh plugin install @dsh-plugins/dsh-bloom-theme` |
-| [⚡ **dsh-llm-hub**](https://github.com/webkubor/dsh-llm-hub) | 智能路由 | 多模型厂商聚合、秒级切换与故障智能重试 | `dsh plugin install @dsh-plugins/dsh-llm-hub` |
-| [🪞 **dsh-user-mirror**](https://github.com/webkubor/dsh-mirror) | 角色记忆 | 用户数字画像、习惯偏好与记忆沉淀网络 | `dsh plugin install @dsh-plugins/dsh-user-mirror` |
-| [🖥️ **dsh-env-inspector**](https://github.com/webkubor/dsh-env-inspector) | 运行环境 | 活跃端口一键释放、CLI 工具链与开发凭据大屏 | `dsh plugin install @dsh-plugins/dsh-env-inspector` |
+| [🎨 **dsh-bloom-theme**](https://github.com/webkubor/dsh-bloom-theme) | 主题美化 | 现代毛玻璃美学、暗黑/亮色自适应与 20+ 精选艺术壁纸 | `npx @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme` |
+| [⚡ **dsh-llm-hub**](https://github.com/webkubor/dsh-llm-hub) | 智能路由 | 多模型厂商聚合、秒级切换与故障智能重试 | `npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-llm-hub` |
+| [🪞 **dsh-user-mirror**](https://github.com/webkubor/dsh-mirror) | 角色记忆 | 用户数字画像、习惯偏好与记忆沉淀网络 | `npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-user-mirror` |
+| [🖥️ **dsh-env-inspector**](https://github.com/webkubor/dsh-env-inspector) | 运行环境 | 活跃端口一键释放、CLI 工具链与开发凭据大屏 | `npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-env-inspector` |
 
 ---
 

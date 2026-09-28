@@ -13,7 +13,7 @@ import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
   normalize, strengthOf, extractEntities, extractGrams,
-  jaccard, findSimilar, selectMemories, renderPreferences, KINDS,
+  jaccard, findSimilar, selectMemories, renderPreferences, KINDS, MAX_MEMORY_CHARS,
 } from '../index.js'
 
 const HALF_LIFE = 14 * 24 * 3600 * 1000 // 14 天
@@ -92,10 +92,50 @@ test('renderPreferences：没有记忆时一个字都不注入', () => {
   assert.equal(renderPreferences(dead, 10_000, NOW, HALF_LIFE), '')
 })
 
-test('renderPreferences 输出带序号、kind 与强度', () => {
+test('renderPreferences 输出带序号与 kind，但不注入强度数字', () => {
   const out = renderPreferences(new Map([['k', mk('图片一律上 R2', { kind: 'principle', hits: 5 })]]), 10_000, NOW, HALF_LIFE)
-  assert.match(out, /1\. \[principle\] 图片一律上 R2（强度 5\.0）/)
+  assert.match(out, /1\. \[principle\] 图片一律上 R2/)
   assert.match(out, /会遗忘，可被新认知覆盖/)
+  // 强度绝对值对模型没有意义，而且模型会把它当数据读走 —— 用户见过 AI 复述
+  // 「这条记忆强度 6.0」当回事。强度是给人看的，只在 UI 上，不进系统提示。
+  assert.doesNotMatch(out, /强度/, '强度数字不得进入 system prompt')
+})
+
+test('selectMemories：超预算时跳过这一条，而不是终止整个循环', () => {
+  // 回归用例：原来这里是 break —— 一条放不下的长条目会让后面**所有**条目
+  // 一律不取，哪怕它们短到完全塞得下。真实症状是 22 条记忆只有 5 条进得去。
+  const table = new Map([
+    ['long', mk('长'.repeat(60), { hits: 9, kind: 'workflow' })], // 30 tok > 25 预算
+    ['short', mk('短', { hits: 1 })],                          // 1 tok，塞得进
+  ])
+  const sel = selectMemories(table, 25, NOW, HALF_LIFE)
+  assert.deepEqual(sel.map(([k]) => k), ['short'], '放不下的应被跳过，后面的短条目仍要能进')
+})
+
+test('selectMemories：按强度/长度密度排序，短原则优先于同强度的长条目', () => {
+  // 同样 2 次印证 —— 纯强度排序下长条目先占满预算，把短原则整片挤掉。
+  // 密度排序（强度 ÷ token）下短的赢，因为短原则才是每次会话都该带的东西。
+  const table = new Map([
+    ['sop', mk('x'.repeat(120), { hits: 2, kind: 'workflow' })], // 60 tok
+    ['rule', mk('减法优先：无用本身就是删除的理由。', { hits: 2, kind: 'principle' })],
+  ])
+  const sel = selectMemories(table, 100, NOW, HALF_LIFE)
+  assert.equal(sel[0][0], 'rule', '密度排序下短原则必须排在长 SOP 前面')
+})
+
+test('selectMemories：超长条目永不进入注入，但也不从库里消失', () => {
+  const table = new Map([
+    ['over', mk('x'.repeat(MAX_MEMORY_CHARS + 1), { hits: 99 })],
+    ['ok', mk('减法优先', { hits: 1 })],
+  ])
+  const sel = selectMemories(table, 10_000, NOW, HALF_LIFE)
+  assert.deepEqual(sel.map(([k]) => k), ['ok'], '超长条目即使 hits 爆表也不注入')
+  assert.ok(table.has('over'), '超长条目仍在库里 —— UI 要能把它单列出来提示搬走')
+})
+
+test('每条记忆带出 token 数 —— UI 靠它说「本轮注入 N 条 · 用了 X tok」', () => {
+  const sel = selectMemories(new Map([['k', mk('图片一律上 R2', { hits: 1 })]]), 10_000, NOW, HALF_LIFE)
+  assert.equal(sel[0][3], Math.ceil('图片一律上 R2'.length / 2))
 })
 
 test('KINDS 是稳定枚举 —— 存量记忆按它归类，改动会让旧数据失去分类', () => {

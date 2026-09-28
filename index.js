@@ -236,19 +236,54 @@ function estTokens(text) {
   return Math.ceil(text.length / 2)
 }
 
-/** 按强度排序，取 token 预算内的记忆。 */
+/**
+ * 单条记忆的字符硬上限。
+ *
+ * 判断依据天然是短的：「减法优先：无用本身就是删除的理由」14 个字说完了。
+ * 记到 150 字往上的，几乎一定混进了操作步骤、路径、token 名 —— 那是 SOP，
+ * 该去 guidance/ 或 reference/。塞在这里的后果是它一个人吃掉半个预算，
+ * 再把后面十几条真正该注入的短原则全挤出去（实测 22 条里只有 5 条生效）。
+ */
+export const MAX_MEMORY_CHARS = 150
+
+/**
+ * 超长条目的哨兵值。放进密度字段参与排序时用它隔开：
+ * 超长的不参与注入，但也不假装它不存在 —— /preferences 端点会把它们
+ * 带 injected:false 原样返回，UI 才能把它们单列出来说清楚。
+ */
+const OVERLONG = -1
+
+/**
+ * 按 token 预算选记忆。
+ *
+ * 排序用「强度密度」= 强度 / token 数，而不是纯强度。这是修「17 条不生效」
+ * 的根因：纯强度排序下，一条 hits 高但 148 token 的长条目先占满预算，
+ * 把后面 7 token 的短原则整片挤掉 —— 而短原则才是每次会话都该带的东西。
+ * 密度排序下，同样 2 次印证，「减法优先」(9 tok) 会排在「写 UI 必须用
+ * lite-browser 实测…」(148 tok) 前面。
+ *
+ * 第二处修：超预算时 `continue` 而不是 `break`。原来一条长条目放不下就
+ * 直接终止整个循环，后面所有条目一律不取，哪怕它们短到完全塞得下。
+ *
+ * @returns `[[key, p, strength, tokens], …]` —— tokens 一并带出去，UI 显示用。
+ */
 export function selectMemories(table, maxTokens, now, halfLifeMs) {
   const entries = [...table.entries()]
     .map(([key, p]) => [key, p, strengthOf(p, now, halfLifeMs)])
     .filter(([, , s]) => s > 0.01) // 已彻底遗忘的不要
-    .sort((a, b) => b[2] - a[2])
+    .map(([key, p, s]) => {
+      const tokens = estTokens(p.text)
+      return [key, p, s, tokens, p.text.length > MAX_MEMORY_CHARS ? OVERLONG : s / tokens]
+    })
+    .sort((a, b) => b[4] - a[4]) // OVERLONG = -1 沉底，永远排最后
+
   const out = []
   let used = 0
-  for (const [key, p, strength] of entries) {
-    const t = estTokens(p.text)
-    if (used + t > maxTokens) break
-    out.push([key, p, strength])
-    used += t
+  for (const [key, p, strength, tokens, density] of entries) {
+    if (density === OVERLONG) continue // 交给 UI 提示用户去搬走
+    if (used + tokens > maxTokens) continue // 放不下就跳过，别连坐后面所有条目
+    out.push([key, p, strength, tokens])
+    used += tokens
   }
   return out
 }
@@ -259,12 +294,16 @@ export function selectMemories(table, maxTokens, now, halfLifeMs) {
  * 框架文案要吝啬到底 —— 预算是留给记忆本身的。
  * 没有记忆就一个字都不注入：「什么时候该记」已经写在 mirror_remember 的
  * 工具定义里，而工具定义本来就常驻上下文，在这儿再讲一遍就是第二真源。
+ *
+ * 刻意不注入强度数字。绝对值对模型没有意义（整个库衰减一轮后最高那条也
+ * 可能只有 0.5），而且模型会把它当数据读走 —— 用户已经见过 AI 复述
+ * 「这条记忆强度 6.0」当回事。强度是给人看的，不是给模型算的。
  */
 export function renderPreferences(table, maxTokens, now, halfLifeMs) {
   const selected = selectMemories(table, maxTokens, now, halfLifeMs)
   if (selected.length === 0) return ''
   const lines = selected.map(
-    ([, p, strength], i) => `${i + 1}. [${p.kind ?? 'principle'}] ${p.text}（强度 ${strength.toFixed(1)}）`,
+    ([, p], i) => `${i + 1}. [${p.kind ?? 'principle'}] ${p.text}`,
   )
   return `关于这个人怎么想（会遗忘，可被新认知覆盖）：\n\n${lines.join('\n')}`
 }
@@ -451,7 +490,14 @@ export function apply(ctx, config) {
 	})
 
 
-  // HTTP 端点：给 client 端（记忆 tab）查偏好列表
+  /*
+   * HTTP 端点：给 client 端（记忆 tab）查偏好列表。
+   *
+   * 这个端点的头号职责是**说真话**：每条都要带 injected / tokens / overlong，
+   * 让 UI 能区分「模型每轮都看得到」和「存在但预算挤掉了」。原版用
+   * Infinity 取全部、只给强度，UI 于是显示「22 条判断在生效」，实际只注入
+   * 5 条 —— 用户花力气看的东西从来没生效过，而界面一个字都没提示。
+   */
   ctx.effect(
     () =>
       ctx.webServer.register({
@@ -460,11 +506,19 @@ export function apply(ctx, config) {
         handler: async (req, res) => {
           try {
             const now = Date.now()
-            const selected = table
-              ? selectMemories(table, Infinity, now, halfLifeMs)
-              : []
+            const injected = table ? selectMemories(table, config.maxTokens, now, halfLifeMs) : []
+            const injectedKeys = new Set(injected.map(([k]) => k))
+            const all = table ? selectMemories(table, Infinity, now, halfLifeMs) : []
+
             const body = JSON.stringify({
-              memories: selected.map(([, p, s]) => ({
+              // 预算实况：UI 顶部那一行「本轮注入 N 条 / 共 M 条 · 预算 X tok」
+              budget: {
+                maxTokens: config.maxTokens,
+                usedTokens: injected.reduce((s, x) => s + x[3], 0),
+                injectedCount: injected.length,
+                totalCount: all.length,
+              },
+              memories: all.map(([, p, s, tokens]) => ({
                 id: p.id,
                 text: p.text,
                 kind: p.kind ?? 'principle',
@@ -472,9 +526,16 @@ export function apply(ctx, config) {
                 strength: Math.round(s * 100) / 100,
                 hits: p.hits,
                 lastSeenAt: p.lastSeenAt,
+                tokens,
+                // 这条模型每轮看得到吗？看 UI 的第一件事就是这个
+                injected: injectedKeys.has(p.id),
+                // 超长 = 该搬去 guidance/ 或 reference/，别占 mirror 的预算
+                overlong: p.text.length > MAX_MEMORY_CHARS,
               })),
               // 让 UI 能把「记什么/怎么分类」原样讲给人听，不用在两处各写一份
               kinds: KINDS,
+              // 单条上限，UI 提示「超过这个长度就不记了」用
+              maxChars: MAX_MEMORY_CHARS,
               // 给状态球表态用：刚记过什么、记了几条
               lastLearned,
             })
@@ -569,6 +630,7 @@ export function apply(ctx, config) {
       name: 'mirror_remember',
       description:
         '记下一条可复用的判断依据，供以后所有会话使用。容量有限，宁缺毋滥。\n' +
+        'text 必须是一句话、150 字以内 —— 这是判断依据的长度，不是 SOP 的长度。\n' +
         '不记：一次性请求（那是任务）、客观事实（路径账号服务器另有真源）、你自己的猜测。\n' +
         '同一主题有新说法就直接再记一次，系统会覆盖旧的。',
       // 注意：parameters 是「参数名 → schema」的映射，必填用内联 required: true。
@@ -578,7 +640,7 @@ export function apply(ctx, config) {
         text: {
           type: 'string',
           required: true,
-          description: '这条依据本身，一句话，用对方的说法。',
+          description: '这条依据本身，一句话，150 字以内，用对方的说法。',
         },
         // enum 已经把四类枚举出来了，再逐条解释一遍是重复 —— 类名本身够自解释
         kind: { type: 'string', required: true, enum: Object.keys(KINDS) },
@@ -613,6 +675,18 @@ export function apply(ctx, config) {
         }
         const text = String(args.text || '').trim()
         if (text.length < 4) throw new Error('mirror_remember: text 太短，说不清就别记')
+        // 超长一律拒收，并说清该往哪儿放 —— 放进去的代价是它一个人吃掉半个
+        // 注入预算，再把后面十几条短原则挤出 system prompt（实测 22 条只生效 5 条）。
+        // 只警告不拦没有用：模型记过一次就认为记过了，下次照记。
+        if (text.length > MAX_MEMORY_CHARS) {
+          throw new Error(
+            `mirror_remember: text 有 ${text.length} 字，超过 ${MAX_MEMORY_CHARS} 字上限，没记。\n` +
+              '判断依据是一句话，不是 SOP。带操作步骤、路径、token 名、工具名的内容属于两种东西：\n' +
+              '  · 要 AI 每次会话都遵守的规矩 → ~/.dsh/memory/guidance/ 放一个 md（要有 description 头）\n' +
+              '  · 只是资料/清单，需要时才查    → ~/.dsh/memory/reference/\n' +
+              '如果核心判断能压进 ' + MAX_MEMORY_CHARS + ' 字，就压进去记 —— 抽象掉步骤，只留取舍。',
+          )
+        }
         const outcome = remember({ text, kind: args.kind, reason: String(args.reason || '').trim() })
         lastLearned = { at: Date.now(), count: 1 }
         ctx.logger?.info(`dsh-mirror: ${outcome} [${args.kind}] ${text}`)

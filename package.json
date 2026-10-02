@@ -63,6 +63,6 @@
     "prepublishOnly": "npm run check && npm test && node scripts/prepublish-gate.mjs && node scripts/readme-gate.mjs",
     "check": "node --check index.js && node --check client.js && node --check guidance.js",
     "test": "node --test test/*.test.mjs",
-    "deploy": "rsync -av client.js index.js guidance.js package.json cordis.patch.yml README.md LICENSE types ~/.dsh/profiles/web/node_modules/@dsh-plugins/dsh-user-mirror/"
+    "deploy": "rsync -av client.js index.js guidance.js package.json cordis.patch.yml README.md LICENSE types ~/.dsh/profiles/${DSH_PROFILE:-desktop}/node_modules/@dsh-plugins/dsh-user-mirror/"
   }
 }

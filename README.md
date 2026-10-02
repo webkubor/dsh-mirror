@@ -126,7 +126,7 @@ v0.4 之前是用正则扫模型的 reasoning 流，找「用户偏好…」这�
 > 前提：装好 Node.js 即可，**无需全局安装 dsh** —— 官方入口就是 `npx @deepseek-ai/dsh`。已全局安装的可把它换成 `dsh`。
 
 ```bash
-npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-user-mirror
+npx @deepseek-ai/dsh plugin --profile <你的 profile> add @dsh-plugins/dsh-user-mirror
 ```
 
 ⚠️ **只能装在提供 `storageDomain` 和 `webServer` 的 profile 上**（也就是 web）。
@@ -199,11 +199,17 @@ storageDomain, webServer)` 并让整个 boot 失败 —— 前者是记忆持久
   <a href="https://github.com/webkubor/dsh-env-inspector">🖥️ 电脑环境</a>
 </p>
 
-一行装齐（只需 Node.js），装完重启 DSH 即可：
+一行装齐（只需 Node.js），装完重启 DSH 即可。**把 `PROFILE` 换成你自己的 profile 名**：
 
 ```bash
-npx -y @deepseek-ai/dsh plugin --profile web add dsh-bloom-theme @dsh-plugins/dsh-llm-hub @dsh-plugins/dsh-user-mirror @dsh-plugins/dsh-env-inspector && node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/web/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
+PROFILE=<你的 profile>
+npx -y @deepseek-ai/dsh plugin --profile "$PROFILE" add dsh-bloom-theme @dsh-plugins/dsh-llm-hub @dsh-plugins/dsh-user-mirror @dsh-plugins/dsh-env-inspector && PROFILE="$PROFILE" node -e 'const f=(process.env.DSH_HOME||require("os").homedir()+"/.dsh")+"/profiles/"+process.env.PROFILE+"/package.json",p=require(f),b=p.dsh.profile.bundles;for(const n of Object.keys(p.dependencies))if(/^(dsh-bloom-theme|@dsh-plugins\/)/.test(n)&&!b.includes(n))b.push(n);require("fs").writeFileSync(f,JSON.stringify(p,null,2)+"\n")'
 ```
+
+> **桌面端用户**：官方 Electron 端独占 `desktop` profile，命令行对它做插件操作会被拒
+> （`profile "desktop" is managed exclusively by the Electron application`）——
+> 请在应用内的**插件管理**里安装与升级。下面的 CLI 写法只适用于自建 profile。
+
 
 ---
 

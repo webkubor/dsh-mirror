@@ -111,10 +111,14 @@ The cause: bigram only sees surface overlap, not synonymy. With a hard entry cap
 > Only Node.js is required — **no global dsh install**; upstream's official entry is `npx @deepseek-ai/dsh`. If dsh is installed globally, use `dsh` instead.
 
 ```bash
-npx @deepseek-ai/dsh plugin --profile web add @dsh-plugins/dsh-user-mirror
+npx @deepseek-ai/dsh plugin --profile <your-profile> add @dsh-plugins/dsh-user-mirror
 ```
 
-⚠️ **Only works on profiles that provide `storageDomain` and `webServer`** (i.e. `web`). A headless profile has neither — the plugin will sit in `pending (waiting for services: storageDomain, webServer)` and break boot. The first is the foundation for persistence; the second is the channel the **Memory** tab reads from.
+> **Desktop app users**: the official Electron app owns the `desktop` profile exclusively — the CLI
+> refuses plugin operations on it (`profile "desktop" is managed exclusively by the Electron application`).
+> Install and update from the plugin manager inside the app; the CLI form above is for self-managed profiles.
+
+⚠️ **Only works on profiles that provide `storageDomain` and `webServer`** (i.e. the desktop app profile). A headless profile has neither — the plugin will sit in `pending (waiting for services: storageDomain, webServer)` and break boot. The first is the foundation for persistence; the second is the channel the **Memory** tab reads from.
 
 ### On ai-orb vendoring
 

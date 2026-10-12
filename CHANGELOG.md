@@ -2,6 +2,27 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.8.4](https://github.com/webkubor/dsh-mirror/compare/v0.8.3...v0.8.4) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **mirror:** 记忆 tab 从展示页改成控制面板 —— 说真话，砍掉自嗨 ([6dd6dab](https://github.com/webkubor/dsh-mirror/commit/6dd6dab30446c174b34fd0a9b56b7c8fda2bfc10))
+* **release:** 等 check 跑完再挂 auto-merge ([463e3ef](https://github.com/webkubor/dsh-mirror/commit/463e3efdc998d785db1ed83a54ed82a8f4132973))
+
+
+### 📝 Documentation
+
+* DEV_NOTES 顶部加迁移指针（不改历史正文） ([2340099](https://github.com/webkubor/dsh-mirror/commit/2340099d01955516031f299aaa55b2e47c6087be))
+* 安装命令改为官方 npx 写法 ([70e7137](https://github.com/webkubor/dsh-mirror/commit/70e7137da1da9472a7c00f2bf2292a6aa5384f40))
+* 安装说明改到桌面端，profile 名不再写死 web ([aae1442](https://github.com/webkubor/dsh-mirror/commit/aae1442bd44d0d6716af02595b01294106b85d02))
+* 底部推荐区改为一张全家桶预览图 + 一行装齐命令 ([d0dd87c](https://github.com/webkubor/dsh-mirror/commit/d0dd87c8972808fccb0e573a5570dab6bf78f98a))
+
+
+### 🛠️ CI / Build
+
+* **release:** 接上 release-please，发版从此零人工 ([d23b495](https://github.com/webkubor/dsh-mirror/commit/d23b49555c647693ff4d9127e9e86a2a4cb84cc9))
+
 ## [0.8.3] - 2026-09-27
 
 ### 📛 包装升级：徽章换成立体大款式 + 接入 README 门禁

@@ -2,6 +2,13 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.8.5](https://github.com/webkubor/dsh-mirror/compare/v0.8.4...v0.8.5) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **release:** 以 mergeable_state 为门，不再等所有 check 跑完 ([2a7222d](https://github.com/webkubor/dsh-mirror/commit/2a7222d50911d5e74e929908f6e2c80c9b5543ee))
+
 ## [0.8.4](https://github.com/webkubor/dsh-mirror/compare/v0.8.3...v0.8.4) (2026-10-12)
 
 

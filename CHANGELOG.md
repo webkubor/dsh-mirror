@@ -2,6 +2,14 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.8.6](https://github.com/webkubor/dsh-mirror/compare/v0.8.5...v0.8.6) (2026-10-12)
+
+
+### 🐛 Bug Fixes
+
+* **release:** blocked 不再一读到就判死 ([23ad7f8](https://github.com/webkubor/dsh-mirror/commit/23ad7f80e871c69769267d32c6e607c453b6ba96))
+* **release:** 删掉 checks.listForRef 那层判据，只认 mergeable_state ([91f1a65](https://github.com/webkubor/dsh-mirror/commit/91f1a656f2301377f33d3c985d2b829e83e8a381))
+
 ## [0.8.5](https://github.com/webkubor/dsh-mirror/compare/v0.8.4...v0.8.5) (2026-10-12)
 
 

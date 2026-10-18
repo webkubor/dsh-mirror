@@ -2,6 +2,13 @@
 
 本项目遵循 [Semantic Versioning](https://semver.org/lang/zh-CN/)。
 
+## [0.8.7](https://github.com/webkubor/dsh-mirror/compare/v0.8.6...v0.8.7) (2026-10-18)
+
+
+### 🐛 Bug Fixes
+
+* **release:** 自动解除机器人 review thread 阻塞并添加定时发版巡检 ([539409f](https://github.com/webkubor/dsh-mirror/commit/539409fd8e88771083bbe922fcca43f6420414fe))
+
 ## [0.8.6](https://github.com/webkubor/dsh-mirror/compare/v0.8.5...v0.8.6) (2026-10-12)
 
 
